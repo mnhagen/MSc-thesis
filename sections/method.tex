@@ -1,0 +1,53 @@
+\chapter{\label{cha:method}Experimental Setup}
+
+This chapter describes the datasets, evaluation metrics, and training
+procedures used throughout the thesis. It also clarifies how models
+with different output-resolution behavior are compared in the
+discretization transfer experiments.
+
+\section{Datasets}
+
+This section should describe all datasets used in the thesis and
+separate public benchmarks from the Navier-Stokes dataset generated for
+this work.
+
+\subsection{Public datasets}
+
+List the benchmark datasets, summarize their governing equations and
+data format, and explain why they are suitable for evaluating neural
+operators.
+
+\subsection{Generated Navier-Stokes dataset}
+
+Describe how the dataset was generated, which parameters were varied,
+and any quirks that later help explain model behavior. If this becomes
+too detailed, the generation procedure can be moved to an appendix while
+retaining a concise summary here.
+
+\section{Evaluation Metrics}
+
+Define the metrics used to compare models, such as the $L_2$ error and
+relative error, and explain how they are aggregated over the test set.
+
+\section{Training Details}
+
+Summarize the optimization settings, learning-rate schedule, early
+stopping or patience settings, number of epochs, and any preprocessing
+steps shared across experiments.
+
+\section{Resolution Transfer Protocol}
+
+This section should explain how discretization invariance is evaluated
+in practice.
+
+\subsection{Train-test resolution split}
+
+Explain that models are trained on one resolution and evaluated on other
+resolutions to measure generalization across discretizations.
+
+\subsection{Architectural comparison details}
+
+Clarify that FNO naturally predicts on the input resolution, whereas CNO
+predicts on its internal resolution, and explain how outputs are made
+comparable for a fair evaluation.
+

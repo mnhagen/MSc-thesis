@@ -1,15 +1,83 @@
-\chapter{\label{cha:title}Chapter Title}
+\chapter{\label{cha:background}Background \& Theory}
 
-Short chapter intro \ldots
+This chapter introduces the theoretical background needed for the
+remainder of the thesis. It first places operator learning in context
+with more classical learning setups and then discusses the neural
+operator architectures that are central to this work.
 
-\section{A section}
+\section{Operator Learning}
 
-\lipsum{2} % add some pseudo content
+This section introduces operator learning as a mapping between
+functions, rather than the more familiar vector-to-vector setting. It
+should explain why this perspective is useful for PDE-governed physical
+systems and introduce the CDE concept that motivates resolution-aware
+learning.
 
-\lipsum{2}
+\subsection{Vector-to-vector versus function-to-function mapping}
 
-\section{Another section}
+Contrast conventional supervised learning with operator learning and
+explain why PDE solution operators are naturally formulated in the
+function-to-function setting.
 
-\lipsum{7} % add some pseudo content
+\subsection{Continuous-domain perspective}
 
+Introduce the continuous-domain view and connect it to the notion of
+discretization invariance used throughout the thesis.
+
+\section{Fourier Neural Operator}
+
+This section should explain the FNO architecture and the spectral
+convolution mechanism on which it is based.
+
+\subsection{Architecture}
+
+Describe the lifting layer, Fourier layers, spectral convolution,
+non-linear transformations, and projection back to the target field.
+
+\subsection{Strengths}
+
+Discuss the global receptive field, computational efficiency through
+FFT-based convolutions, and the suitability of FNO for smooth
+solution operators.
+
+\subsection{Weaknesses}
+
+Discuss spectral truncation, sensitivity to resolution changes, and
+the reliance on regular grids.
+
+\section{Convolutional Neural Operator}
+
+This section should explain the CNO architecture and the inductive
+biases that differentiate it from FNO.
+
+\subsection{Architecture}
+
+Describe the encoder-decoder style structure, convolutional blocks, and
+the way multi-scale processing is used.
+
+\subsection{Bandlimited assumption}
+
+Explain the bandlimited assumption and why it can stabilize learning and
+support more consistent behavior across discretizations.
+
+\subsection{Local versus global inductive bias}
+
+Compare the locality of convolutional operators with the global spectral
+bias of FNO and connect this to the later experiments.
+
+\section{Mesh-free Operator Learning and geo-FNO}
+
+This section motivates operator learning on irregular domains and
+introduces geo-FNO as the architecture used for this purpose.
+
+\subsection{Motivation for irregular domains}
+
+Explain why many scientific and engineering problems do not naturally
+live on uniform Cartesian grids and why this matters for neural
+operators.
+
+\subsection{geo-FNO}
+
+Describe the geo-FNO approach and how it extends Fourier-based operator
+learning to non-uniform meshes.
 
