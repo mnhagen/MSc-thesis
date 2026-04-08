@@ -12,15 +12,11 @@
 \let\newfloat\undefined \usepackage{algorithmic} 
 \usepackage{algorithm}
 
-% Include right (LaTeX/PDFLaTeX) graphics package
-% (doesn't work under cygwin apperently)
-%\ifx\pdftexversion\undefined
-\usepackage[dvips]{graphicx}
-\usepackage[dvips]{color}
-%\else
-%\usepackage[pdftex]{graphicx}
-%\usepackage[pdftex]{color}
-%\fi
+% Graphics setup for PDF builds.
+% Avoid forcing the dvips driver so PNG figures in figures/ load correctly.
+\usepackage{graphicx}
+\usepackage{color}
+\graphicspath{{figures/}{img/}}
 
 \usepackage{hyperref}
 
