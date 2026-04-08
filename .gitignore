@@ -1,1 +1,45 @@
-build/
+#build/
+# =========================
+# LaTeX build files
+# =========================
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+
+# =========================
+# LaTeX Workshop / VSCode
+# =========================
+.vscode/
+
+# =========================
+# Temporary / backup files
+# =========================
+*.bak
+*.tmp
+*.swp
+*~
+
+# =========================
+# PDF (optional)
+# =========================
+# Uncomment if you DON'T want to track compiled PDFs
+# *.pdf
+
+# =========================
+# OS-specific files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Latexmk directory (if used)
+# =========================
+latex.out/

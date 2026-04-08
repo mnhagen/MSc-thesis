@@ -95,26 +95,26 @@ ThePlace, the Netherlands\\
 \frontmatter
 \thispagestyle{empty}
 \maketitle                                      % for the cover page
-\makeformaltitlepages{\input{abstract}}         % for formal title pages with all info
+\makeformaltitlepages{\input{sections/abstract}}         % for formal title pages with all info
 
-\include{preface}
+\include{sections/preface}
 
 \cleardoublepage\tableofcontents
 \cleardoublepage\listoffigures
 \cleardoublepage\mainmatter
 
-\include{introduction} 
-\include{chapter} 
-\include{related_work} 
-\include{conclusions_and_future_work} 
+\include{sections/introduction} 
+\include{sections/chapter} 
+\include{sections/related_work} 
+\include{sections/conclusions_and_future_work} 
 
 \bibliographystyle{plainnat}
 \bibliography{thesis}
 
 \appendix
 \def\chaptername{Appendix}
-\include{appendix}
-\include{requirements}
+\include{sections/appendix}
+\include{sections/requirements}
 
 
 \end{document}
