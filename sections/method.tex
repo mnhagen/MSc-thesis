@@ -22,27 +22,32 @@ The discretization invariance experiments on regular grids use two
 datasets: a self-generated Navier-Stokes dataset and a Darcy flow
 dataset obtained from prior work.
 
-\subsubsection{Navier-Stokes}
+\subsubsection{Navier-Stokes}\label{navier-stokes}
 
-One of the main datasets used in this thesis is a two-dimensional
-Navier-Stokes dataset generated specifically for this work. The dataset
-represents a PDE solution operator on a uniform grid and is therefore
-well suited for evaluating how neural operators behave when the
-discretization is changed between training and testing. In the main
-text, it is sufficient to state that the dataset was generated in-house,
-to describe the physical quantity provided as input and the field
-predicted as output, and to summarize the resolution(s) used in the
-experiments. The exact simulation pipeline, parameter ranges, and any
-numerical settings that may be relevant for reproducibility are better
-placed in an appendix and referenced here.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/navier_input_output.png}
+    \caption{\label{fig:navier} Initial and final vorticity fields for a sample from the Navier-Stokes dataset.}
+\end{figure}
 
-Because this dataset was generated specifically for the present study,
-it also plays an important role in interpreting later results. Any
-quirks of the data distribution that help explain observed model
-behavior should therefore be mentioned briefly in this chapter, even if
-the full generation procedure is deferred.
+For the regular-grid experiments, we use a self-generated two-dimensional Navier-Stokes dataset on the unit square. The Navier-Stokes equations are among the fundamental equations of fluid dynamics and arise in many areas of physics and engineering, including atmospheric and oceanic flows, aerodynamics, and industrial transport processes. The dataset is formulated and solved in vorticity form, with governing equation:
+
+
+\begin{equation}
+    \partial_t \omega + u \cdot \nabla \omega = \nu \Delta \omega + f,
+\end{equation}
+
+where $\omega$ denotes the vorticity field, $u$ the incompressible velocity field, $\nu$ the viscosity, and $f$ an external forcing term. The learning task considered in this thesis is not a pressure or velocity prediction problem, but an operator mapping from an initial vorticity field to a later vorticity field. The input to the model is the initial vorticity field $\omega(\cdot,0)$, and the output is the vorticity field at a later time $\omega(\cdot,T)$. An example input-output pair is shown in Figure~\ref{fig:navier}.
+
+The dataset consists of 1000 samples generated at a resolution of $256 \times 256$. Between samples, the viscosity and forcing remain fixed, while the initial vorticity field is varied.
+
+Further details on the data-generation procedure are provided in Appendix~\ref{navier-details}.
 
 \subsubsection{Darcy flow}
+
+Also used for the uniform grid experiments is the Darcy flow dataset introduced by Li et al.\cite{li2021fno}. 
+In this benchmark, the task is to learn the solution operator of a steady-state two-dimensional Darcy flow problem
+on the unit square, governed by the following PDE:
 
 \begin{figure}
     \centering
@@ -50,10 +55,6 @@ the full generation procedure is deferred.
     \caption{\label{fig:darcy} Example of an input diffusion coefficient field \(a(x,y)\) and the resulting pressure
     field \(u(x,y)\) with Dirichlet boundary conditions.}
 \end{figure}
-
-For the regular-grid experiments, we use the Darcy flow dataset introduced by Li et al.\cite{li2021fno}. 
-In this benchmark, the task is to learn the solution operator of a steady-state two-dimensional Darcy flow problem
-on the unit square:
 
 \begin{equation}
     -\nabla \cdot (a(x)\nabla u(x)) = f(x), \qquad x \in (0,1)^2,
@@ -64,9 +65,11 @@ on the unit square:
 
  The input is a spatially varying diffusion coefficient field $a(x)$, and the output is the
  corresponding solution field $u(x)$ under a prescribed forcing term and Dirichlet boundary conditions. An example
- input-output mapping can be seen in figure \ref{fig:darcy}. This PDE has many applications within physics and 
- engineering, including drainage and irrigation in agricultural soils and fluid migration around nuclear waste
- repositories \cite{darcyapplications}. The dataset contains 10000 samples at a resolution of 128$\times$128.
+ input-output mapping can be seen in figure \ref{fig:darcy}. Between samples, $f(x)$ is kept constant while the $a(x)$ is varied. This PDE has many applications within physics and engineering, including drainage and irrigation in agricultural soils and fluid migration around nuclear waste repositories \cite{darcyapplications}. For this 
+  thesis, the Darcy flow dataset serves as a regular-grid benchmark for evaluating the performance of FNO and CNO 
+  across discretizations. This dataset was selected because it provides a comparatively smooth benchmark, 
+  complementing the more irregular and turbulent behavior of the Navier-Stokes dataset discussed in Section~\ref{navier-stokes}. Using both datasets makes it possible to evaluate model performance under qualitatively different solution regimes. The dataset contains 10000 samples at a resolution of 128$\times$128.
+
 
 
 \subsection{Non-uniform datasets}

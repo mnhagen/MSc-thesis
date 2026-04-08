@@ -8,3 +8,15 @@ abbreviations.
 \item [bar:] \ldots
 \end{description}
 
+\chapter{\label{navier-details}Navier-Stokes data generation details}
+
+The velocity field is not part of the stored dataset or the prediction target. Instead, it is reconstructed from the vorticity during data generation in order to evaluate the nonlinear advection term, using the streamfunction relation
+
+\begin{equation}
+    -\Delta \psi = \omega, \qquad u = \nabla^\perp \psi.
+\end{equation}
+
+to talk about:
+forcing term is a sinusoidal term (show form?)
+viscosity is kept constant; what is the value? 1e-5
+method of generation; randomly generate N kx, ky modes, multiply by gaussian envelope, real field constraint, inverse transform
