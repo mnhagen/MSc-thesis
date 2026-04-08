@@ -7,22 +7,130 @@ discretization transfer experiments.
 
 \section{Datasets}
 
-This section should describe all datasets used in the thesis and
-separate public benchmarks from the Navier-Stokes dataset generated for
-this work.
+The experiments in this thesis use both uniform-grid and non-uniform
+datasets. For each dataset, the goal of this section is to describe the
+underlying physical problem, the mapping learned by the model, the data
+source, and the aspects of the dataset that are relevant for
+interpreting the results. Dataset-specific implementation details are
+included only when they affect the conclusions drawn later in the
+thesis. In particular, the full generation procedure for the
+self-generated Navier-Stokes dataset is deferred to Appendix~X.
 
-\subsection{Public datasets}
+\subsection{Uniform-grid datasets}
 
-List the benchmark datasets, summarize their governing equations and
-data format, and explain why they are suitable for evaluating neural
-operators.
+The discretization invariance experiments on regular grids use two
+datasets: a self-generated Navier-Stokes dataset and a Darcy flow
+dataset obtained from prior work.
 
-\subsection{Generated Navier-Stokes dataset}
+\subsubsection{Navier-Stokes}
 
-Describe how the dataset was generated, which parameters were varied,
-and any quirks that later help explain model behavior. If this becomes
-too detailed, the generation procedure can be moved to an appendix while
-retaining a concise summary here.
+One of the main datasets used in this thesis is a two-dimensional
+Navier-Stokes dataset generated specifically for this work. The dataset
+represents a PDE solution operator on a uniform grid and is therefore
+well suited for evaluating how neural operators behave when the
+discretization is changed between training and testing. In the main
+text, it is sufficient to state that the dataset was generated in-house,
+to describe the physical quantity provided as input and the field
+predicted as output, and to summarize the resolution(s) used in the
+experiments. The exact simulation pipeline, parameter ranges, and any
+numerical settings that may be relevant for reproducibility are better
+placed in an appendix and referenced here.
+
+Because this dataset was generated specifically for the present study,
+it also plays an important role in interpreting later results. Any
+quirks of the data distribution that help explain observed model
+behavior should therefore be mentioned briefly in this chapter, even if
+the full generation procedure is deferred.
+
+\subsubsection{Darcy flow}
+
+\begin{figure}
+    \centering
+    \includegraphics{figures/darcy_input_output.png}
+    \caption{\label{fig:darcy} Example of an input diffusion coefficient field \(a(x,y)\) and the resulting pressure
+    field \(u(x,y)\) with Dirichlet boundary conditions.}
+\end{figure}
+
+For the regular-grid experiments, we use the Darcy flow dataset introduced by Li et al.\cite{li2021fno}. 
+In this benchmark, the task is to learn the solution operator of a steady-state two-dimensional Darcy flow problem
+on the unit square:
+
+\begin{equation}
+    -\nabla \cdot (a(x)\nabla u(x)) = f(x), \qquad x \in (0,1)^2,
+\end{equation}
+\begin{equation}
+    u(x) = 0, \qquad x \in \partial(0,1)^2,
+\end{equation}
+
+ The input is a spatially varying diffusion coefficient field $a(x)$, and the output is the
+ corresponding solution field $u(x)$ under a prescribed forcing term and Dirichlet boundary conditions. An example
+ input-output mapping can be seen in figure \ref{fig:darcy}. This PDE has many applications within physics and 
+ engineering, including drainage and irrigation in agricultural soils and fluid migration around nuclear waste
+ repositories \cite{darcyapplications}. The dataset contains 10000 samples at a resolution of 128$\times$128.
+
+
+\subsection{Non-uniform datasets}
+
+The experiments on irregular domains use three datasets: the elasticity
+benchmark used in the original geo-FNO work, an incompressible Euler
+dataset modeling flow past a cylinder, and a nuclear engineering
+dataset consisting of temperature profiles for a single HTGR column.
+
+\subsubsection{Elasticity}
+
+The elasticity dataset is included because it is one of the canonical
+benchmarks used to evaluate geo-FNO on non-uniform meshes. It provides
+a direct connection to the original geo-FNO setting and therefore helps
+assess whether the implementation used in this thesis reproduces the
+expected behavior on an established test case.
+
+In the dataset description, it is enough to explain the physical problem
+at a high level, describe the input and output quantities, and note that
+the data is defined on an irregular geometry rather than a uniform
+Cartesian grid. The main text should also cite the original source and
+report the experimental resolution or mesh representation at the level
+needed to interpret the results.
+
+\subsubsection{Incompressible Euler flow past a cylinder}
+
+A second non-uniform benchmark is an incompressible Euler dataset
+describing fluid flow past a cylinder. This dataset was used in prior
+work on operator learning for PDEs and is included here because it
+provides a fluid-dynamics test case on a geometry that is not naturally
+aligned with a regular grid.
+
+For the purposes of this thesis, the most important information is what
+the model receives as input, what field it predicts, and why the domain
+geometry makes this dataset relevant for geo-FNO. As with the elasticity
+dataset, the source should be cited and the description should include
+the mesh or sampling representation used in the experiments. Fine-grained
+details of the original data-generation process are not needed unless
+they become important for later analysis.
+
+\subsubsection{HTGR column temperature dataset}
+
+The final non-uniform dataset consists of temperature profiles for a
+single column of a high temperature gas-cooled reactor (HTGR) and was
+generated by a colleague. This dataset is of particular interest because
+it connects the thesis to the motivating nuclear engineering
+application. Compared with the public benchmark datasets, it is also a
+more domain-specific test of whether geo-FNO can learn useful operators
+for reactor-related data.
+
+In the main text, this dataset should be introduced in terms of its
+physical meaning, the variables that define the input and output, and
+the way spatial locations are represented. Since the dataset is not a
+standard public benchmark, it is also worth briefly explaining how it
+was obtained and why it is scientifically relevant. If there are strong
+structural regularities or simplifications in the data that later help
+explain the results, those should be noted here as well.
+
+\subsection{Scope note}
+
+In addition to the datasets discussed above, a non-uniformly sampled
+Navier-Stokes dataset was used during troubleshooting. Since it was not
+part of the final evaluation, it is not described as a primary dataset
+in this thesis.
 
 \section{Evaluation Metrics}
 
@@ -50,4 +158,3 @@ resolutions to measure generalization across discretizations.
 Clarify that FNO naturally predicts on the input resolution, whereas CNO
 predicts on its internal resolution, and explain how outputs are made
 comparable for a fair evaluation.
-
