@@ -101,7 +101,7 @@ needed to interpret the results.
     \caption{\label{fig:cylinder-flow} Example initial and final states
     for the incompressible flow past a cylinder dataset, shown on the
     irregular geometry together with the underlying point cloud. The
-    color scale represents the speed $\lVert \boldbf{v} \rVert$.}
+    color scale represents the speed $\lVert \mathbf{v} \rVert$.}
 \end{figure}
 
 A second non-uniform benchmark is an incompressible Navier-Stokes dataset
@@ -111,14 +111,14 @@ provides a fluid-dynamics test case on a geometry that is not naturally
 aligned with a regular grid \cite{calm-pde, pfaff-datasets}.
 
 The dataset describes two-dimensional incompressible flow with velocity
-$\boldbf{v}$ and pressure $p$, governed by:
+$\mathbf{v}$ and pressure $p$, governed by:
 
 \begin{equation}
-    \nabla \cdot \boldbf{v} = 0,
+    \nabla \cdot \mathbf{v} = 0,
 \end{equation}
 \begin{equation}
-    \rho_0 \left(\partial_t \boldbf{v} + \boldbf{v} \cdot \nabla \boldbf{v}\right) + \nabla p
-    = \mu \nabla^2 \boldbf{v},
+    \rho_0 \left(\partial_t \mathbf{v} + \mathbf{v} \cdot \nabla \mathbf{v}\right) + \nabla p
+    = \mu \nabla^2 \mathbf{v},
 \end{equation}
 
 where $\rho_0$ is the constant density and $\mu$ the viscosity. The
