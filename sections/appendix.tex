@@ -24,7 +24,7 @@ This appendix provides additional details on the generation of the
 self-produced Navier-Stokes dataset used in the uniform grid
 experiments. The dataset is formulated in vorticity form on the unit
 square and is generated numerically from the incompressible
-Navier-Stokes equation:
+Navier-Stokes equation \cite{batchelor1967fluid,chorin1993fluid}:
 
 \begin{equation}
     \partial_t \omega + u \cdot \nabla \omega = \nu \Delta \omega + f,
@@ -35,7 +35,7 @@ velocity field, $\nu$ the viscosity, and $f$ an external forcing term.
 The velocity field is not part of the stored dataset or the prediction
 target. Instead, it is reconstructed from the vorticity during data
 generation in order to evaluate the nonlinear advection term, using the
-streamfunction relation
+streamfunction relation \cite{batchelor1967fluid,chorin1993fluid}
 
 \begin{equation}
     -\Delta \psi = \omega, \qquad u = \nabla^\perp \psi.
@@ -43,14 +43,24 @@ streamfunction relation
 
 In all generated samples, the viscosity is kept fixed at
 $\nu = 10^{-5}$. The forcing term is also shared across samples and is
-given by
+given by:
 
 \begin{equation}
     f(y,t) = 0.5 \left(1 + 0.5 \sin(0.5 t)\right)\sin(4\pi y),
 \end{equation}
 
-which corresponds to a sinusoidal forcing in the vertical direction
-with a slowly varying amplitude over time.
+which is consistent with the Kolmogorov-flow literature, where the
+forcing is commonly chosen as a single sinusoidal mode that varies only
+in one spatial direction \cite{chandler2013kolmogorov,vela2024kolmogorov}.
+In the present dataset, the spatial factor $\sin(4\pi y)$ serves as the
+corresponding single-mode forcing on the unit square. The prefactor was
+chosen so that the forcing remains smooth, bounded, and of moderate
+magnitude throughout the simulation: specifically,
+$0.5(1 + 0.5\sin(0.5 t)) \in [0.25, 0.75]$. The additional temporal
+modulation is not intended to reproduce a specific benchmark forcing
+law, but was introduced as a synthetic extension to generate trajectories
+with mild time-dependent variation in the energy input while avoiding
+abrupt or high-frequency changes.
 
 The dataset contains 1000 samples at a resolution of $256 \times 256$.
 For each sample, an initial vorticity field is generated in Fourier
@@ -65,6 +75,10 @@ symmetry so that the inverse Fourier transform produces a real-valued
 field. No coefficients are assigned in the mixed-sign quadrants. The
 initial vorticity field is finally obtained by applying an inverse
 Fourier transform.
+
+Each initial condition is then evolved forward in time using a
+fourth-order Runge--Kutta (RK4) integration scheme to obtain the
+corresponding later vorticity field stored in the dataset.
 
 
 This initialization procedure produces smooth but diverse initial
