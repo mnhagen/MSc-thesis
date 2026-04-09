@@ -10,13 +10,67 @@ abbreviations.
 
 \chapter{\label{navier-details}Navier-Stokes data generation details}
 
-The velocity field is not part of the stored dataset or the prediction target. Instead, it is reconstructed from the vorticity during data generation in order to evaluate the nonlinear advection term, using the streamfunction relation
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/navier_spectral.png}
+    \caption{\label{fig:navier-spectral} Fourier spectra of an example
+    initial and final vorticity field from the generated Navier-Stokes
+    dataset. The initial spectrum reflects the truncated low-frequency
+    initialization with Gaussian weighting, while the final spectrum
+    shows the redistribution of spectral energy over time.}
+\end{figure}
+
+This appendix provides additional details on the generation of the
+self-produced Navier-Stokes dataset used in the uniform grid
+experiments. The dataset is formulated in vorticity form on the unit
+square and is generated numerically from the incompressible
+Navier-Stokes equation:
+
+\begin{equation}
+    \partial_t \omega + u \cdot \nabla \omega = \nu \Delta \omega + f,
+\end{equation}
+
+where $\omega$ denotes the vorticity field, $u$ the incompressible
+velocity field, $\nu$ the viscosity, and $f$ an external forcing term.
+The velocity field is not part of the stored dataset or the prediction
+target. Instead, it is reconstructed from the vorticity during data
+generation in order to evaluate the nonlinear advection term, using the
+streamfunction relation
 
 \begin{equation}
     -\Delta \psi = \omega, \qquad u = \nabla^\perp \psi.
 \end{equation}
 
-to talk about:
-forcing term is a sinusoidal term (show form?)
-viscosity is kept constant; what is the value? 1e-5
-method of generation; randomly generate N kx, ky modes, multiply by gaussian envelope, real field constraint, inverse transform
+In all generated samples, the viscosity is kept fixed at
+$\nu = 10^{-5}$. The forcing term is also shared across samples and is
+given by
+
+\begin{equation}
+    f(y,t) = 0.5 \left(1 + 0.5 \sin(0.5 t)\right)\sin(4\pi y),
+\end{equation}
+
+which corresponds to a sinusoidal forcing in the vertical direction
+with a slowly varying amplitude over time.
+
+The dataset contains 1000 samples at a resolution of $256 \times 256$.
+For each sample, an initial vorticity field is generated in Fourier
+space. Fourier coefficients are assigned for indices
+$(k_x,k_y) = (i,j)$ with $i,j \in \{1,\dots,k_{\max}-1\}$ and
+$k_{\max}=16$. These coefficients are random complex numbers whose
+amplitudes are modulated by a Gaussian envelope of the form
+$\exp\!\left(-\frac{1}{2}\frac{i^2+j^2}{(k_{\max}/2)^2}\right)$, which
+suppresses higher frequencies and yields smooth initial conditions. The
+coefficients in the $-k_x,-k_y$ quadrant are then set by conjugate
+symmetry so that the inverse Fourier transform produces a real-valued
+field. No coefficients are assigned in the mixed-sign quadrants. The
+initial vorticity field is finally obtained by applying an inverse
+Fourier transform.
+
+
+This initialization procedure produces smooth but diverse initial
+conditions while concentrating most spectral energy in the low-frequency
+region. Figure~\ref{fig:navier-spectral} illustrates this by showing the
+Fourier spectra of an example initial state and its corresponding final
+state. The figure highlights both the initially active modes and the
+effect of the Gaussian envelope, as well as the redistribution of
+spectral energy under the Navier-Stokes dynamics.
