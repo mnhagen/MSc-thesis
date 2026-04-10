@@ -84,21 +84,26 @@ Delft, the Netherlands \\
 
 \date{}
 
-\pretitle{\begin{flushright}\Huge}
-\posttitle{%
-  \par
-  \rule{\textwidth}{4pt}\par\textit{\Large{\@subtitle}}
-  \par
-  \vfill
-  \ifcover@picture
-     \@coverpicture
-  \fi
-  \vfill
-  \end{flushright}}
-\preauthor{\begin{flushright}\begingroup\Large}
-\postauthor{\endgroup\end{flushright}\vskip 1em}
-\predate{\begingroup}
-\postdate{\endgroup\cleardoublepage}
+% Avoid memoir's deprecated title-patching helpers by rendering the
+% cover page directly instead of customizing \maketitle via \pretitle
+% and related hooks.
+\renewcommand{\maketitle}{%
+  \begingroup
+  \thispagestyle{empty}%
+  \begin{flushright}%
+    {\Huge \@title\par}%
+    \rule{\textwidth}{4pt}\par
+    \textit{\Large{\@subtitle}}\par
+    \vfill
+    \ifcover@picture
+      \@coverpicture
+    \fi
+    \vfill
+    {\Large \@author\par}%
+  \end{flushright}%
+  \endgroup
+  \cleardoublepage
+}
 
 
 %-------------------------------------------------------------------%
