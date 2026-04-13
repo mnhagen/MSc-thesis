@@ -1,6 +1,6 @@
 \chapter{\label{cha:method}Experimental Setup}
 
-This chapter describes the datasets, evaluation metrics, and training
+This chapter describes the datasets and training
 procedures used throughout the thesis. It also clarifies how models
 with different output-resolution behavior are compared in the
 discretization transfer experiments.
@@ -93,6 +93,8 @@ Cartesian grid. The main text should also cite the original source and
 report the experimental resolution or mesh representation at the level
 needed to interpret the results.
 
+Should I inlclu
+
 \subsubsection{Incompressible Navier-Stokes flow past a cylinder}
 
 \begin{figure}
@@ -157,65 +159,95 @@ setting. Unlike the public benchmark datasets considered earlier, the
 data was produced internally as part of ongoing work by a colleague.
 
 Physically, the dataset describes the temperature distribution within a
-three-dimensional reactor column. The spatial sampling locations lie on an irregular mesh, which is shared
-for the entire dataset. Along the axial direction, the column is
-quantized into 17 distinct $z$-levels. Each sample corresponds to a
-boundary condition in which the boundary temperature is kept constant,
-and the associated output is the steady-state temperature field
-throughout the sampled points in the column.
+three-dimensional reactor column. The spatial sampling locations lie on
+an irregular mesh that is shared across all samples. Along the axial
+direction, the column is quantized into 17 distinct $z$-levels.
+The boundary temperature ranges from $300\,^{\circ}\mathrm{C}$ to
+$1000\,^{\circ}\mathrm{C}$ in steps of $5\,^{\circ}\mathrm{C}$,
+yielding 141 distinct thermal conditions. Since the prediction task is
+defined on individual horizontal slices rather than on the full
+three-dimensional column, this results in a total of $2397$ two-dimensional samples.
 
-The dataset consists of boundary temperatures ranging from
-$300\,^{\circ}\mathrm{C}$ to $1000\,^{\circ}\mathrm{C}$ in steps of
-$5\,^{\circ}\mathrm{C}$, resulting in a total of 141 samples. In the
-prediction task considered in this thesis, the models are not asked to
-reconstruct the full three-dimensional temperature field at once.
-Instead, they receive the boundary temperature together with a specified
-$z$-level, and predict the temperature at all sampled $(x,y)$ locations
-in the corresponding horizontal slice. The task can therefore be
-interpreted as learning a mapping from the boundary condition and axial
-position to the two-dimensional temperature profile within that layer.
+In the prediction task considered in this thesis, the model receives the
+boundary temperature together with a specified $z$-level and predicts
+the temperature at all sampled $(x,y)$ locations in the corresponding
+horizontal slice. The task can therefore be interpreted as learning a
+mapping from the boundary condition and axial position to the
+two-dimensional temperature profile within that layer. An example of
+such a slice, together with the underlying irregular mesh, is shown in
+Figure~\ref{fig:htgr-column}.
 
-The train-test split is constructed such that some boundary
-temperatures and some $z$-levels are excluded entirely from training.
-As a result, test samples may involve unseen temperatures, unseen
-axial levels, or both. This makes the evaluation more demanding than a
-random holdout split, since it explicitly tests the model's ability to
-generalize across both thermal conditions and spatial positions. An
-example of a temperature field and the associated irregular mesh is
-shown in Figure~\ref{fig:htgr-column}.
+The train-validation-test split is constructed by excluding specific
+boundary temperatures and specific $z$-levels from training, rather than
+by applying a conventional random split. As a result, the held-out data
+contains samples with unseen temperatures, unseen axial levels, or both,
+making the evaluation more demanding by explicitly testing the model's
+ability to generalize across both thermal conditions and spatial
+positions.
+
+Since the model input is limited to the axial level $z$ and the boundary
+temperature $T$, the raw representation is relatively simple and may not
+be sufficiently expressive for learning the underlying mapping. For this
+reason, feature engineering was used to construct an expanded
+representation of the input variables before training. Feature
+engineering refers to the transformation or augmentation of raw input
+variables into a representation that is more informative for the
+learning algorithm, and prior work has shown that such feature
+engineering can improve predictive performance
+\cite{feature-engineering}. The exact form of this representation, as
+well as a comparison of model performance across different input
+encodings, is presented in
+Appendix~\ref{appendix:htgr-input-engineering}.
 
 
+\subsection{Training setup}
 
-\subsection{Scope note}
+All models are trained in a supervised setting on paired input-output
+samples from the datasets described above. For most datasets, the data is
+split into a training set and a held-out evaluation set. The training set
+is used to optimize the model parameters, while the held-out set is used
+to monitor performance during training and to report final model
+performance. For the HTGR column temperature dataset, a separate
+train-validation-test split is used, constructed by holding out specific
+boundary temperatures and axial levels as described above.
 
-In addition to the datasets discussed above, a non-uniformly sampled
-Navier-Stokes dataset was used during troubleshooting. Since it was not
-part of the final evaluation, it is not described as a primary dataset
-in this thesis.
+The exact hyperparameters differ between the uniform-grid and
+non-uniform-grid experiments and between datasets. To keep the main text focused on the experimental
+design rather than implementation details, full hyperparameter settings,
+including learning rates, batch sizes, training epochs, and architecture
+parameters, are given in Appendix~\ref{appendix:hyperparameters}.
 
-\section{Evaluation Metrics}
 
-Define the metrics used to compare models, such as the $L_2$ error and
-relative error, and explain how they are aggregated over the test set.
+\subsection{Uniform-grid resolution transfer experiments}
 
-\section{Training Details}
+The uniform-grid experiments are designed to evaluate discretization
+invariance by testing how well a model trained at one spatial resolution
+generalizes to other resolutions. For each dataset, the model is trained
+at a chosen training resolution and then evaluated both at the training
+resolution and at lower and higher resolutions. This makes it possible to compare performance at the training resolution with performance after transferring the same trained model to different
+spatial resolutions.
 
-Summarize the optimization settings, learning-rate schedule, early
-stopping or patience settings, number of epochs, and any preprocessing
-steps shared across experiments.
 
-\section{Resolution Transfer Protocol}
+FNO and CNO handle changes in resolution differently. FNO produces
+predictions of the same resolution as the input it is given, so the model
+output can be compared directly to the target field at that resolution.
+CNO, however, produces predictions on its internal resolution. Therefore,
+when CNO is evaluated on an input resolution different from its internal
+resolution, the CNO prediction is resampled onto the input resolution
+before the error is computed. This resampling step is included so that
+FNO and CNO are evaluated against target fields on the same spatial grid.
 
-This section should explain how discretization invariance is evaluated
-in practice.
+\subsection{Non-uniform-grid experiments}
 
-\subsection{Train-test resolution split}
+The non-uniform-grid experiments evaluate geo-FNO on datasets whose
+spatial sampling locations do not lie on a regular Cartesian grid. In
+these experiments, the model is trained and tested on the same underlying
+point cloud or mesh associated with each dataset, so no grid-based
+resampling step is required when computing the prediction error.
 
-Explain that models are trained on one resolution and evaluated on other
-resolutions to measure generalization across discretizations.
-
-\subsection{Architectural comparison details}
-
-Clarify that FNO naturally predicts on the input resolution, whereas CNO
-predicts on its internal resolution, and explain how outputs are made
-comparable for a fair evaluation.
+Because the point cloud is fixed within each non-uniform dataset, these
+experiments do not test discretization invariance in the same
+resolution-transfer sense as the uniform-grid experiments. REFER TO SECTION DISCUSSING DISCRETIZATION INVARIANCE AND ITS EXTENSION/CONNECTION TO NON-UNIFORM GRIDS. Instead, they
+test whether geo-FNO can learn mappings on irregular spatial data and
+generalize to held-out samples, boundary conditions, time steps, axial
+levels, or material configurations, depending on the dataset.

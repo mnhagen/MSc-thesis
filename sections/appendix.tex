@@ -1,12 +1,13 @@
-\chapter{\label{cha:glossary}Glossary}
+\chapter{\label{AI-disclosure}Disclosure on AI use}
 
-In this appendix we give an overview of frequently used terms and
-abbreviations.
+AI-based tools were used during this thesis project as support for
+coding, debugging, troubleshooting, source finding, and comprehension of
+technical material. During the writing process, they were also used to
+help structure sections and improve phrasing.
 
-\begin{description}
-\item[foo:] \ldots
-\item [bar:] \ldots
-\end{description}
+All AI-generated suggestions were reviewed and edited before being
+included. The research decisions, experiments, interpretation of results,
+and final thesis text remain my own responsibility.
 
 \chapter{\label{navier-details}Navier-Stokes data generation details}
 
@@ -35,7 +36,7 @@ velocity field, $\nu$ the viscosity, and $f$ an external forcing term.
 The velocity field is not part of the stored dataset or the prediction
 target. Instead, it is reconstructed from the vorticity during data
 generation in order to evaluate the nonlinear advection term, using the
-streamfunction relation \cite{batchelor1967fluid,chorin1993fluid}
+streamfunction relation \cite{batchelor1967fluid,chorin1993fluid}:
 
 \begin{equation}
     -\Delta \psi = \omega, \qquad u = \nabla^\perp \psi.
@@ -74,7 +75,7 @@ coefficients in the $-k_x,-k_y$ quadrant are then set by conjugate
 symmetry so that the inverse Fourier transform produces a real-valued
 field. No coefficients are assigned in the mixed-sign quadrants. The
 initial vorticity field is finally obtained by applying an inverse
-Fourier transform.
+Fourier transform, followed by normalization such that the maximum absolute value of the vorticity is 1.
 
 Each initial condition is then evolved forward in time using a
 fourth-order Runge--Kutta (RK4) integration scheme to obtain the
@@ -88,3 +89,91 @@ Fourier spectra of an example initial state and its corresponding final
 state. The figure highlights both the initially active modes and the
 effect of the Gaussian envelope, as well as the redistribution of
 spectral energy under the Navier-Stokes dynamics.
+
+
+\chapter{\label{appendix:htgr-input-engineering}HTGR input engineering details}
+
+This appendix provides additional details on the input engineering used
+for the HTGR column temperature dataset, as introduced in
+Chapter~\ref{cha:method}. In this dataset, the model input consists only
+of the axial level $z$ and the boundary temperature $T$. Since this input
+is low-dimensional, several alternative representations were tested to
+determine whether a more expressive encoding of the same information
+would improve predictive performance.
+
+Table~\ref{tab:htgr-input-engineering} shows a representative subset of
+the tested input representations. The raw representation $(z,T)$ already
+performs well, with a test relative RMSE of $9.10 \times 10^{-3}$.
+Normalizing the same two variables does not improve performance in this
+case, and instead gives a slightly higher test relative RMSE of
+$9.51 \times 10^{-3}$. This suggests that normalization alone is not
+necessarily beneficial for this dataset, and that the model may benefit
+from access to the original numerical scale of the axial position and
+boundary temperature.
+
+The best-performing representation among the tested configurations is
+the normalized polynomial encoding $(z,T,z^2,T^2,zT)$, which reduces the
+test relative RMSE to $9.46 \times 10^{-4}$. The added polynomial terms
+are not intended to represent new physical variables, and in particular
+$z^2$ and $T^2$ should not be interpreted as directly meaningful
+physical quantities for this problem. Instead, they provide the model
+with a richer representation of the simple scalar inputs, making certain
+nonlinear dependencies easier to learn. The fact that the basic
+normalized representation performs worse than the raw input, while the
+normalized polynomial representation performs best, also illustrates that
+the effect of feature engineering choices is not always straightforward.
+
+A second engineered representation was tested using features with a
+clearer connection to the geometry of the problem:
+$(z,T,\sin(\pi(z-z_{\min})/L_z),T\sin(\pi(z-z_{\min})/L_z),
+\cos(\pi(z-z_{\min})/L_z))$. The sine terms vanish at the axial
+boundaries, while the cosine term equals one at the boundaries, giving
+the model access to features that encode boundary-aware structure in the
+$z$ direction. This representation achieves a test relative RMSE of
+$2.58 \times 10^{-3}$, substantially improving over the raw
+representation but not matching the normalized polynomial model. It also
+converged in substantially less time in this experiment. This result
+suggests that physically motivated feature choices can be effective, but
+also that physical interpretability alone does not guarantee the best
+empirical performance.
+
+Overall, these results show that the choice of input representation has
+a significant effect on the HTGR prediction task. The normalized
+polynomial representation performs best among the configurations shown
+here, while the boundary-aware trigonometric representation provides a
+useful comparison: it is physically easier to motivate and improves over
+the raw input, but does not reach the same accuracy as the best
+polynomial encoding.
+
+\begin{table}[t]
+    \centering
+    \caption{\label{tab:htgr-input-engineering} Performance comparison
+    of selected input representations for the HTGR column temperature
+    dataset.}
+    \begin{tabular}{llll}
+        \hline
+        Input representation & Best val relRMSE & Epoch & Test relRMSE / MSE \\
+        \hline
+        $(z, T)$ &
+        $8.623981 \times 10^{-3}$ & 30 &
+        $9.102986 \times 10^{-3}$ / $5.212278 \times 10^{1}$ \\
+
+        normalized $(z, T)$ &
+        $1.018177 \times 10^{-2}$ & 19 &
+        $9.513722 \times 10^{-3}$ / $5.942555 \times 10^{1}$ \\
+
+        normalized $(z, T, z^2, T^2, zT)$ &
+        $9.223184 \times 10^{-4}$ & 232 &
+        $9.462218 \times 10^{-4}$ / $5.422029 \times 10^{-1}$ \\
+
+        $(z, T, \sin(\pi(z-z_{\min})/L_z), T\sin(\pi(z-z_{\min})/L_z),
+        \cos(\pi(z-z_{\min})/L_z))$ &
+        $2.472064 \times 10^{-3}$ & 84 &
+        $2.579207 \times 10^{-3}$ / $4.031768 \times 10^{0}$ \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\chapter{\label{appendix:hyperparameters}Hyperparameters}}
+
+This appendix provides a complete list of the hyperparameters used for each model and dataset in the experiments described in Chapter~\ref{cha:method}. The hyperparameters include architectural choices, training settings, and any dataset-specific parameters that were relevant for model performance. The listed hyperpameters were determined through a combination of prior literature, preliminary experiments, and manual tuning to achieve good performance.
