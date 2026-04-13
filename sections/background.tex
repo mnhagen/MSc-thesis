@@ -58,7 +58,7 @@ the way multi-scale processing is used.
 \subsection{Bandlimited assumption}
 
 Explain the bandlimited assumption and why it can stabilize learning and
-support more consistent behavior across discretizations.
+support more consistent behavior across discretizations. Discuss how this means explicitly discarding high-frequency information, where the FNO keeps it (but does not know what to do with it)
 
 \subsection{Local versus global inductive bias}
 
@@ -81,3 +81,6 @@ operators.
 Describe the geo-FNO approach and how it extends Fourier-based operator
 learning to non-uniform meshes.
 
+\section{Discretization invariance on mesh-free grids}
+
+More philosophical discussion of what discretization invariance means when we no longer have a regular grid and how this relates to the notion of a continuous-domain operator. 

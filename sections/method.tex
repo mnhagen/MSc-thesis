@@ -200,7 +200,7 @@ encodings, is presented in
 Appendix~\ref{appendix:htgr-input-engineering}.
 
 
-\subsection{Training setup}
+\section{Training setup}
 
 All models are trained in a supervised setting on paired input-output
 samples from the datasets described above. For most datasets, the data is
@@ -218,7 +218,7 @@ including learning rates, batch sizes, training epochs, and architecture
 parameters, are given in Appendix~\ref{appendix:hyperparameters}.
 
 
-\subsection{Uniform-grid resolution transfer experiments}
+\section{Uniform-grid resolution transfer experiments}
 
 The uniform-grid experiments are designed to evaluate discretization
 invariance by testing how well a model trained at one spatial resolution
@@ -237,7 +237,7 @@ resolution, the CNO prediction is resampled onto the input resolution
 before the error is computed. This resampling step is included so that
 FNO and CNO are evaluated against target fields on the same spatial grid.
 
-\subsection{Non-uniform-grid experiments}
+\section{Non-uniform-grid experiments}
 
 The non-uniform-grid experiments evaluate geo-FNO on datasets whose
 spatial sampling locations do not lie on a regular Cartesian grid. In
