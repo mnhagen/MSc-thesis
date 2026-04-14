@@ -249,9 +249,9 @@ grid points.
 
 Four model variants are compared for each dataset. The first two are FNO
 models retaining either 8 or 16 Fourier modes in each spatial direction,
-denoted FNO_k8 and FNO_k16. The other two are CNO variants. The first is
-the regular CNO architecture as outlined in section REFER TO THEORY SECTION HERE, referred to as CNO_standard. The second is a modified CNO in which the
-upsample-nonlinearity-downsample (UND) operation is replaced by a simple pointwise nonlinearity, referred to as CNO_no_UND. This operation is one of the architectural changes that distinguishes the CNO from a
+denoted FNO\_k8 and FNO\_k16. The other two are CNO variants. The first is
+the regular CNO architecture as outlined in section REFER TO THEORY SECTION HERE, referred to as CNO\_standard. The second is a modified CNO in which the
+upsample-nonlinearity-downsample (UND) operation is replaced by a simple pointwise nonlinearity, referred to as CNO\_no\_UND. This operation is one of the architectural changes that distinguishes the CNO from a
 U-Net-like architecture and is intended to reduce aliasing effects
 introduced by nonlinearities. Comparing the standard and modified CNO
 therefore makes it possible to assess the effect of this component in
@@ -272,23 +272,24 @@ bicubic interpolation.
 
 In addition to reporting the loss at each tested resolution, a scalar
 measure is used to summarize how strongly the loss changes away from the
-training resolution. For a set of tested resolutions $\mathcal{R}$, loss
-$L_N$ at resolution $N$, training resolution $N_{\mathrm{train}}$, and
-small constant $\epsilon$, this score is defined as:
+training resolution. For a set of tested resolutions $R$ with loss
+$L_N$ at resolution $N$\footnote{All evaluated domains are square. The resolution is therefore
+reported by its one-dimensional grid size $N$, while the full discretized
+domain contains $N^2$ grid points.} and with training resolution $N_{\mathrm{train}}$, this score is defined as:
 
 \begin{equation}
-    D = \frac{1}{|\mathcal{R}|}
-    \sum_{N \in \mathcal{R}}
+    D = \frac{1}{|R|}
+    \sum_{N \in R}
     \left|
-    \log(L_N + \epsilon)
-    - \log(L_{N_{\mathrm{train}}} + \epsilon)
+    \log(L_N)
+    - \log(L_{N_{\mathrm{train}}})
     \right|.
 \end{equation}
 
 Lower values of $D$ indicate that the loss remains closer to the loss at
 the training resolution across the evaluated resolutions. This score is
 only a measure of consistency across resolutions, not of absolute model
-quality. The loss values themselves remain the primary measure of predictive performance, while $D$ is used only as an quantitative measure of discretization robustness.
+quality. The loss values themselves remain the primary measure of predictive performance, while $D$ is used only as a quantitative measure of discretization robustness.
 
 
 \section{Non-uniform-grid experiments}
