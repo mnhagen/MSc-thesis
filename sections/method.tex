@@ -43,7 +43,7 @@ The dataset consists of 1000 samples generated at a resolution of $256 \times 25
 
 Further details on the data-generation procedure are provided in Appendix~\ref{navier-details}.
 
-\subsubsection{Darcy flow}
+\subsubsection{Darcy flow}\label{darcy-flow}
 
 Also used for the uniform grid experiments is the Darcy flow dataset introduced by Li et al.\cite{li2021fno}. 
 In this benchmark, the task is to learn the solution operator of a steady-state two-dimensional Darcy flow problem
@@ -152,21 +152,32 @@ Figure~\ref{fig:cylinder-flow}. The dataset consists of 1000 samples each contai
 \end{figure}
 
 The final non-uniform dataset consists of steady-state temperature
-profiles for a single column of a high temperature gas-cooled reactor
+profiles for a single column of a prismatic core high temperature gas-cooled reactor
 (HTGR). This dataset is included because it provides a first
 application-oriented test case for geo-FNO in a nuclear engineering
 setting. Unlike the public benchmark datasets considered earlier, the
 data was produced internally as part of ongoing work by a colleague.
 
 Physically, the dataset describes the temperature distribution within a
-three-dimensional reactor column. The spatial sampling locations lie on
-an irregular mesh that is shared across all samples. Along the axial
-direction, the column is quantized into 17 distinct $z$-levels.
-The boundary temperature ranges from $300\,^{\circ}\mathrm{C}$ to
-$1000\,^{\circ}\mathrm{C}$ in steps of $5\,^{\circ}\mathrm{C}$,
-yielding 141 distinct thermal conditions. Since the prediction task is
-defined on individual horizontal slices rather than on the full
-three-dimensional column, this results in a total of $2397$ two-dimensional samples.
+three-dimensional reactor column. For each case, a constant boundary
+temperature is imposed and a coupled neutronics-thermohydraulics
+calculation is performed until a steady state is reached. The transient
+evolution toward this steady state is not included in the dataset; only
+the final steady-state temperature fields are used. The use of a fixed
+boundary temperature is a simplifying assumption, since in a realistic
+reactor system the boundary temperature would itself change as the system
+evolves. This simplification was made to produce a controlled dataset
+within the time constraints of the project.
+
+The spatial sampling locations lie on an irregular mesh that is shared
+across all samples. Along the axial direction, the column is quantized
+into 17 distinct $z$-levels. The imposed boundary temperature ranges from
+$300\,^{\circ}\mathrm{C}$ to $1000\,^{\circ}\mathrm{C}$ in steps of
+$1\,^{\circ}\mathrm{C}$, yielding 701 distinct thermal conditions. Since
+the prediction task is defined on individual horizontal slices rather
+than on the full three-dimensional column, this results in a total of
+$17 \times 701 = 11917$ two-dimensional samples.
+
 
 In the prediction task considered in this thesis, the model receives the
 boundary temperature together with a specified $z$-level and predicts
@@ -222,20 +233,63 @@ parameters, are given in Appendix~\ref{appendix:hyperparameters}.
 
 The uniform-grid experiments are designed to evaluate discretization
 invariance by testing how well a model trained at one spatial resolution
-generalizes to other resolutions. For each dataset, the model is trained
-at a chosen training resolution and then evaluated both at the training
-resolution and at lower and higher resolutions. This makes it possible to compare performance at the training resolution with performance after transferring the same trained model to different
-spatial resolutions.
+generalizes to other resolutions. The Navier-Stokes and Darcy flow
+datasets described in \ref{navier-stokes} and \ref{darcy-flow} respectively are used for these experiments. For each dataset, the models are trained at a chosen training resolution and then
+evaluated both at the training resolution and at lower and higher
+resolutions. This makes it possible to compare performance at the
+training resolution with performance after transferring the same trained
+model to different spatial resolutions.
 
+For the Navier-Stokes dataset, the models are trained at a resolution of
+$192 \times 192$ and evaluated on resolutions from $128 \times 128$ to
+$256 \times 256$ in steps of 16 grid points. For the Darcy flow dataset,
+the models are trained at a resolution of $96 \times 96$ and evaluated
+on resolutions from $64 \times 64$ to $128 \times 128$ in steps of 8
+grid points.
+
+Four model variants are compared for each dataset. The first two are FNO
+models retaining either 8 or 16 Fourier modes in each spatial direction,
+denoted FNO_k8 and FNO_k16. The other two are CNO variants. The first is
+the regular CNO architecture as outlined in section REFER TO THEORY SECTION HERE, referred to as CNO_standard. The second is a modified CNO in which the
+upsample-nonlinearity-downsample (UND) operation is replaced by a simple pointwise nonlinearity, referred to as CNO_no_UND. This operation is one of the architectural changes that distinguishes the CNO from a
+U-Net-like architecture and is intended to reduce aliasing effects
+introduced by nonlinearities. Comparing the standard and modified CNO
+therefore makes it possible to assess the effect of this component in
+the resolution-transfer setting.
 
 FNO and CNO handle changes in resolution differently. FNO produces
-predictions of the same resolution as the input it is given, so the model
-output can be compared directly to the target field at that resolution.
-CNO, however, produces predictions on its internal resolution. Therefore,
-when CNO is evaluated on an input resolution different from its internal
-resolution, the CNO prediction is resampled onto the input resolution
-before the error is computed. This resampling step is included so that
-FNO and CNO are evaluated against target fields on the same spatial grid.
+predictions at the same resolution as the input it is given. When an FNO
+is evaluated at a resolution $N \times N$, both the input and target
+field are resampled to $N \times N$, after which the FNO prediction can
+be compared directly to the target field on that grid. CNO, however,
+produces predictions on its internal resolution. Therefore, when CNO is
+evaluated on an input resolution different from its internal resolution,
+the CNO prediction is resampled onto the input resolution before the
+error is computed. The target field is resampled to the same resolution,
+so that both FNO and CNO are evaluated against target fields on the same
+spatial grid. All resampling in these experiments is performed with
+bicubic interpolation.
+
+In addition to reporting the loss at each tested resolution, a scalar
+measure is used to summarize how strongly the loss changes away from the
+training resolution. For a set of tested resolutions $\mathcal{R}$, loss
+$L_N$ at resolution $N$, training resolution $N_{\mathrm{train}}$, and
+small constant $\epsilon$, this score is defined as:
+
+\begin{equation}
+    D = \frac{1}{|\mathcal{R}|}
+    \sum_{N \in \mathcal{R}}
+    \left|
+    \log(L_N + \epsilon)
+    - \log(L_{N_{\mathrm{train}}} + \epsilon)
+    \right|.
+\end{equation}
+
+Lower values of $D$ indicate that the loss remains closer to the loss at
+the training resolution across the evaluated resolutions. This score is
+only a measure of consistency across resolutions, not of absolute model
+quality. The loss values themselves remain the primary measure of predictive performance, while $D$ is used only as an quantitative measure of discretization robustness.
+
 
 \section{Non-uniform-grid experiments}
 

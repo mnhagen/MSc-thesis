@@ -152,23 +152,23 @@ polynomial encoding.
     dataset.}
     \begin{tabular}{llll}
         \hline
-        Input representation & Best val relRMSE & Epoch & Test relRMSE / MSE \\
+        Input representation & Val relRMSE  & Test relRMSE / MSE \\
         \hline
         $(z, T)$ &
-        $8.623981 \times 10^{-3}$ & 30 &
+        $8.623981 \times 10^{-3}$  &
         $9.102986 \times 10^{-3}$ / $5.212278 \times 10^{1}$ \\
 
         normalized $(z, T)$ &
-        $1.018177 \times 10^{-2}$ & 19 &
+        $1.018177 \times 10^{-2}$  &
         $9.513722 \times 10^{-3}$ / $5.942555 \times 10^{1}$ \\
 
         normalized $(z, T, z^2, T^2, zT)$ &
-        $9.223184 \times 10^{-4}$ & 232 &
+        $9.223184 \times 10^{-4}$  &
         $9.462218 \times 10^{-4}$ / $5.422029 \times 10^{-1}$ \\
 
         $(z, T, \sin(\pi(z-z_{\min})/L_z), T\sin(\pi(z-z_{\min})/L_z),
         \cos(\pi(z-z_{\min})/L_z))$ &
-        $2.472064 \times 10^{-3}$ & 84 &
+        $2.472064 \times 10^{-3}$ &
         $2.579207 \times 10^{-3}$ / $4.031768 \times 10^{0}$ \\
         \hline
     \end{tabular}
