@@ -2,7 +2,7 @@
 
 \section{Navier-Stokes}
 
-IMPORTANT: mention again somewhere that the navier stokes dataset is synthetic. This is necessary to understand some of the results, like how FNO\_k16 performs so much better than FNO\_k8 for Navier-Stokes than it does for Darcy flow. It also explains why the the FNO_k16 with added resampling onto a fixed internal grid becomes a flat line. not only is this just a good way to improve the performance of the FNO, but the 16 modes covers the bandwidth of the dataset, thus the model performs as well as it does on any resolution greater than 32x32.
+IMPORTANT: mention again somewhere that the navier stokes dataset is synthetic. This is necessary to understand some of the results, like how FNO\_k16 performs so much better than FNO\_k8 for Navier-Stokes than it does for Darcy flow. It also explains why the the FNO\_k16 with added resampling onto a fixed internal grid becomes a flat line. not only is this just a good way to improve the performance of the FNO, but the 16 modes covers the bandwidth of the dataset, thus the model performs as well as it does on any resolution greater than 32x32.
 
 \begin{figure}
     \centering
@@ -94,8 +94,7 @@ FNO\_k16, CNO\_no\_UND, and FNO\_k8. The two FNO variants show a similar
 pattern to that observed for Navier-Stokes; the loss is lowest near the
 training resolution and increases when the model is evaluated at other
 resolutions. This increase is stronger below the training resolution
-than above it. At lower resolutions, however, FNO\_k8 outperforms
-FNO\_k16, with the ordering switching at $N = 88$. This indicates that
+than above it. Notably, FNO\_k8 outperforms FNO\_k16 at resolutions below $N = 88$. This indicates that
 retaining more Fourier modes does not consistently improve performance
 under transfer to coarser grids.
 
