@@ -1,0 +1,144 @@
+\chapter{\label{uniform-results-discussion} Uniform grids - Results and Discussion}
+
+\section{Navier-Stokes}
+
+IMPORTANT: mention again somewhere that the navier stokes dataset is synthetic. This is necessary to understand some of the results, like how FNO_k16 performs so much better than FNO_k8 for Navier-Stokes than it does for Darcy flow. It also explains why the the FNO_k16 with added resampling onto a fixed internal grid becomes a flat line. not only is this just a good way to improve the performance of the FNO, but the 16 modes covers the bandwidth of the dataset, thus the model performs as well as it does on any resolution greater than 32x32.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/loss_vs_resolution_navier_stokes.png}
+    \caption{\label{fig:loss_vs_resolution_navier_stokes} A plot of the MSE loss as a function of resolution for the four models trained on the Navier-Stokes dataset. The training resolution is indicated by the vertical dashed line.}
+\end{figure}
+
+\begin{table}
+    \centering
+    \caption{\label{tab:d-values-navier-stokes} Discretization robustness score $D$ for the Navier-Stokes uniform-grid experiment. Lower values indicate that the loss remains more consistent across evaluation resolutions relative to the loss at the training resolution.}
+    \begin{tabular}{lc}
+        \hline
+        Model & $D$ \\
+        \hline
+        FNO\_k8 & 0.5076 \\
+        FNO\_k16 & 3.4817 \\
+        CNO\_standard & 0.5854 \\
+        CNO\_no\_UND & 0.5847 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+The four models outlined in section \ref{uniform-experiments} were evaluated on the Navier-Stokes dataset. Figure \ref{fig:loss_vs_resolution_navier_stokes} shows the MSE loss as a function of evaluation resolution for each model, with the training resolution indicated by the vertical dashed line. Table \ref{tab:di-values-navier-stokes} summarizes the discretization robustness value $D$ for each model, which quantifies how much the loss changes across resolutions relative to the training resolution. FNO_k16 reached the lowest training resolution loss but exhibited the highest $D$ value, indicating that its performance degrades more significantly when evaluated at different resolutions. FNO_k8 had a much higher loss at the training resolution but a lower $D$ value, suggesting that its performance is more consistent across resolutions. Both FNOs see a faster increase in loss when testing on lower resolutions than higher resolutions. Both CNOs exhibit comparable training resolution losses and $D$ values, indicating similar performance and robustness to resolution changes. Notably, FNO_k8 exhibits the lowest $D$ value. The standard CNO performs slightly better at the training resolution, lower resolutions and at the higher resolution $N = 208$. At higher resolutions, however, the CNO_no_UND performs outperforms CNO_standard. 
+
+The four models outlined in Section~\ref{uniform-experiments} were
+evaluated on the Navier-Stokes dataset. Figure~\ref{fig:loss_vs_resolution_navier_stokes}
+shows the MSE loss as a function of evaluation resolution for each
+model, with the training resolution indicated by the vertical dashed
+line. Table~\ref{tab:di-values-navier-stokes} reports the discretization
+robustness score $D$, which measures how much the loss changes across
+resolutions relative to the loss at the training resolution.
+
+Among the FNO models, FNO\_k16 achieves the lowest loss at the training
+resolution, but also has the largest value of $D$. Its performance
+therefore changes the most under resolution transfer. This contrast is
+especially pronounced at the lowest tested resolution, where the loss of
+FNO\_k16 increases by more than two orders of magnitude compared with
+its loss at the training resolution. FNO\_k8 has a higher loss at all tested resolution including the training resolution, but a substantially lower value of $D$, indicating
+a more consistent loss across the evaluated resolutions. For both FNO
+variants, the loss increases more rapidly when evaluating below the
+training resolution than when evaluating above it.
+
+The two CNO variants show much flatter loss curves than FNO\_k16 and
+have nearly identical values of $D$. Their training-resolution losses are
+also comparable. The standard CNO performs slightly better at the
+training resolution, at lower resolutions, and at $N = 208$. At the
+highest evaluated resolutions, CNO\_no\_UND gives slightly lower losses
+than CNO\_standard. Overall, the Navier-Stokes results show a trade-off:
+FNO\_k16 gives the best performance at the training resolution, while
+FNO\_k8 and the CNO variants show more consistent behavior across
+resolutions.
+
+
+
+\section{Darcy flow}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/loss_vs_resolution_darcy_flow.png}
+    \caption{\label{fig:loss_vs_resolution_darcy_flow} A plot of the MSE loss as a function of resolution for the four models trained on the Darcy flow dataset. The training resolution is indicated by the vertical dashed line.}
+\end{figure}
+
+\begin{table}
+    \centering
+    \caption{\label{tab:d-values-darcy-flow} Discretization robustness score $D$ for the Darcy flow uniform-grid experiment. Lower values indicate that the loss remains more consistent across evaluation resolutions relative to the loss at the training resolution.}
+    \begin{tabular}{lc}
+        \hline
+        Model & $D$ \\
+        \hline
+        FNO\_k8 & 0.3583 \\
+        FNO\_k16 & 0.4179 \\
+        CNO\_standard & 0.0140 \\
+        CNO\_no\_UND & 0.0260 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+
+To test whether the trends observed on the Navier-Stokes dataset also
+appear on a qualitatively different PDE benchmark, the four models were
+evaluated on the Darcy flow dataset. The Darcy flow dataset was chosen as the solution space is smooth, making it a good point of comparison to the Navier-Stokes dataset. Figure~\ref{fig:loss_vs_resolution_darcy_flow}
+shows the MSE loss as a function of evaluation resolution for each
+model, with the training resolution indicated by the vertical dashed
+line. Table~\ref{tab:d-values-darcy-flow} reports the corresponding
+discretization robustness score $D$.
+
+Compared with the Navier-Stokes experiment, the four models are closer
+in overall performance on the Darcy flow dataset. At the training
+resolution, CNO\_standard achieves the lowest loss, followed by
+FNO\_k16, CNO\_no\_UND, and FNO\_k8. The two FNO variants show a similar
+pattern to that observed for Navier-Stokes; the loss is lowest near the
+training resolution and increases when the model is evaluated at other
+resolutions. This increase is stronger below the training resolution
+than above it. At lower resolutions, however, FNO\_k8 outperforms
+FNO\_k16, with the ordering switching at $N = 88$. This indicates that
+retaining more Fourier modes does not consistently improve performance
+under transfer to coarser grids.
+
+The CNO variants show much flatter loss curves across the evaluated
+resolutions, with $D$ values of order \(10^{-2}\). At lower resolutions,
+both CNO models maintain an almost constant loss, while at higher
+resolutions both losses increase slowly. In contrast to the
+Navier-Stokes experiment, CNO\_standard outperforms CNO\_no\_UND at all
+evaluated resolutions. The loss of CNO\_no\_UND also increases more
+quickly than that of CNO\_standard when evaluating above the training
+resolution. Overall, the Darcy flow results show a clearer separation
+between the FNO and CNO variants in terms of discretization robustness;
+the FNO models are more sensitive to resolution transfer, while the CNO
+models remain nearly constant across the tested range.
+
+
+\section{Discussion/Interpretation/Analysis}
+
+This section should connect the observations back to the theoretical
+differences between the models and explain why we see the patterns we do in the results.
+
+\subsection{FNO}
+
+Discuss spectral truncation and the fact that Fourier mode index does
+not preserve the same physical meaning when the discretization changes.
+
+Mention that the results
+
+\subsection{CNO}
+
+Discuss the role of locality, the bandlimited assumption, and the
+implicit multiscale structure in producing steadier behavior across
+resolutions.
+
+\subsection{improving the FNO}
+
+include the FNOs with UND and/or resampling onto an internal grid as a way to mitigate the discretization effects.
+
+\subsection{Connection to theory}
+
+Tie the empirical behavior back to the contrast between bandlimiting
+and Fourier truncation. 
+
+Is this section necessary? decide whether a last section to summarize/compare the two methods is necessary, or whether the discussion can be integrated into the interpretation of the results for each method.
