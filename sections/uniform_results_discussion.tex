@@ -2,7 +2,7 @@
 
 \section{Navier-Stokes}
 
-IMPORTANT: mention again somewhere that the navier stokes dataset is synthetic. This is necessary to understand some of the results, like how FNO_k16 performs so much better than FNO_k8 for Navier-Stokes than it does for Darcy flow. It also explains why the the FNO_k16 with added resampling onto a fixed internal grid becomes a flat line. not only is this just a good way to improve the performance of the FNO, but the 16 modes covers the bandwidth of the dataset, thus the model performs as well as it does on any resolution greater than 32x32.
+IMPORTANT: mention again somewhere that the navier stokes dataset is synthetic. This is necessary to understand some of the results, like how FNO\_k16 performs so much better than FNO\_k8 for Navier-Stokes than it does for Darcy flow. It also explains why the the FNO_k16 with added resampling onto a fixed internal grid becomes a flat line. not only is this just a good way to improve the performance of the FNO, but the 16 modes covers the bandwidth of the dataset, thus the model performs as well as it does on any resolution greater than 32x32.
 
 \begin{figure}
     \centering
@@ -24,8 +24,6 @@ IMPORTANT: mention again somewhere that the navier stokes dataset is synthetic. 
         \hline
     \end{tabular}
 \end{table}
-
-The four models outlined in section \ref{uniform-experiments} were evaluated on the Navier-Stokes dataset. Figure \ref{fig:loss_vs_resolution_navier_stokes} shows the MSE loss as a function of evaluation resolution for each model, with the training resolution indicated by the vertical dashed line. Table \ref{tab:di-values-navier-stokes} summarizes the discretization robustness value $D$ for each model, which quantifies how much the loss changes across resolutions relative to the training resolution. FNO_k16 reached the lowest training resolution loss but exhibited the highest $D$ value, indicating that its performance degrades more significantly when evaluated at different resolutions. FNO_k8 had a much higher loss at the training resolution but a lower $D$ value, suggesting that its performance is more consistent across resolutions. Both FNOs see a faster increase in loss when testing on lower resolutions than higher resolutions. Both CNOs exhibit comparable training resolution losses and $D$ values, indicating similar performance and robustness to resolution changes. Notably, FNO_k8 exhibits the lowest $D$ value. The standard CNO performs slightly better at the training resolution, lower resolutions and at the higher resolution $N = 208$. At higher resolutions, however, the CNO_no_UND performs outperforms CNO_standard. 
 
 The four models outlined in Section~\ref{uniform-experiments} were
 evaluated on the Navier-Stokes dataset. Figure~\ref{fig:loss_vs_resolution_navier_stokes}
