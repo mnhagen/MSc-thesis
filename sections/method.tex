@@ -283,23 +283,50 @@ in the uniform-grid experiments. The goal is therefore not to measure
 resolution transfer, but to evaluate whether geo-FNO can learn mappings
 on irregular spatial data.
 
+Feature engineering was used in the non-uniform experiments to augment
+the raw model inputs with additional variables that make relevant
+structure in the data more explicit. In general, feature engineering
+refers to the transformation or augmentation of raw input variables into
+representations that are more informative for a machine learning model,
+and prior work has shown that such transformations can improve
+predictive performance \cite{feature-engineering}.
+
+TO BE EXPLAINED HERE: CONNECT CYLINDER FLOW TO THEORY ON GEO-FNO. EXPLAIN THAT "CODE" HERE IS THE X AND Y COORDINATES OF THE CYLINDER'S CENTER AND ITS RADIUS. THIS IS SEPARATE FROM THE POINTWISE QUANTITIES OUTLINED IN THE FEATURE ENGINEERING APPENDIX
+
+Feature engineering was used in the non-uniform experiments to augment
+the raw model inputs with additional variables that make relevant
+structure in the data more explicit. In general, feature engineering
+refers to the transformation or augmentation of raw input variables into
+representations that are more informative for a machine learning model,
+and prior work has shown that such transformations can improve
+predictive performance \cite{feature-engineering}.
+
+TO BE EXPLAINED HERE: CONNECT CYLINDER FLOW TO THEORY ON GEO-FNO. EXPLAIN THAT "CODE" HERE IS THE X AND Y COORDINATES OF THE CYLINDER'S CENTER AND ITS RADIUS. THIS IS SEPARATE FROM THE POINTWISE QUANTITIES OUTLINED IN THE FEATURE ENGINEERING APPENDIX
+
+For the cylinder flow dataset, the model did not produce meaningful
+predictions when it was given only the velocity field on the irregular
+mesh. The input was therefore augmented with geometric information from
+the dataset. In addition to the horizontal and vertical velocity
+components, each mesh point was assigned a one-hot encoding of its node
+type. The node-type categories distinguish the upper, lower and cylinder boundary nodes, left boundary nodes, right boundary nodes, and interior nodes. This made the location of the obstacle more
+explicit in the pointwise input representation, allowing the model to
+identify which mesh points lie on or near the cylinder.
+
+
+For the HTGR column temperature dataset, the raw input consists only of
+the boundary temperature $T$ and the axial level $z$. Since this is a
+low-dimensional representation of the input conditions, several
+alternative representations of $T$ and $z$ were tested. These input
+representations and their effect on model performance are discussed in
+Appendix~\ref{appendix:htgr-input-engineering}. The best performing representation was a trigonometric encoding of $z$ and $T$ and was used for the results reported in the main text.
+
+
 For the HTGR column temperature dataset, a separate
 train-validation-test split is used. The split is constructed over
 individual two-dimensional slice samples, where each sample corresponds
 to one combination of boundary temperature and axial level. Unlike a
 random split, the validation and test samples are selected using fixed
 subsets of the $(z,T)$ input space.
-
-The input to the HTGR model consists of the boundary temperature $T$ and
-the axial level $z$. Since this raw representation is low-dimensional,
-multiple input representations were tested using feature engineering.
-Feature engineering refers to the transformation or augmentation of raw
-input variables into a representation that is more informative for the
-machine learning model, and prior work has shown that such feature
-engineering can improve predictive performance \cite{feature-engineering}. 
-A subset of the input representations tested for the
-HTGR dataset, and their effect on model performance, are presented in
-Appendix~\ref{appendix:htgr-input-engineering}.
 
 The non-uniform-grid results should therefore be interpreted as
 held-out-data evaluations of geo-FNO on irregular spatial

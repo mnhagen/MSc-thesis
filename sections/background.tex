@@ -7,7 +7,7 @@ operator architectures that are central to this work.
 
 SOMEWHERE IN HERE: explain bandlimits/nyquist frequency and how this relates to the resolution of the data and the model's ability to learn the underlying operator. This is a key concept that motivates the CNO architecture and its stability across resolutions, as well as the challenges faced by FNO when dealing with high-frequency information that may not be well-resolved in the training data.
 
-\section{Operator Learning}
+\section{From standard machine learning to Operator Learning}
 
 This section introduces operator learning as a mapping between
 functions, rather than the more familiar vector-to-vector setting. It
@@ -15,16 +15,10 @@ should explain why this perspective is useful for PDE-governed physical
 systems and introduce the CDE concept that motivates resolution-aware
 learning.
 
-\subsection{Vector-to-vector versus function-to-function mapping}
-
-Contrast conventional supervised learning with operator learning and
-explain why PDE solution operators are naturally formulated in the
-function-to-function setting.
-
-\subsection{Continuous-domain perspective}
-
 Introduce the continuous-domain view and connect it to the notion of
 discretization invariance used throughout the thesis.
+
+\subsection{Discretization Invariance}
 
 \section{Fourier Neural Operator}
 
@@ -60,7 +54,7 @@ the way multi-scale processing is used.
 \subsection{Bandlimited assumption}
 
 Explain the bandlimited assumption and why it can stabilize learning and
-support more consistent behavior across discretizations. Discuss how this means explicitly discarding high-frequency information, where the FNO keeps it (but does not know what to do with it)
+support more consistent behavior across discretizations. Discuss how this means explicitly discarding high-frequency information, where the FNO keeps it (but does not know what to do with it).
 
 \subsection{Local versus global inductive bias}
 
@@ -94,3 +88,131 @@ something like:
 In this thesis, discretization invariance is interpreted as the ability of a model trained on data at one uniform resolution to make accurate predictions on the same underlying problem at different uniform resolutions. This notion does not transfer directly to non-uniform point clouds, where there is no single grid resolution. For non-uniform data, the relevant question is instead whether the sampled points sufficiently resolve the solution features needed for prediction.
 
 talk about this more in method/results chapter when we discuss loss as function of resolution.
+
+
+FINAL VERSION:
+
+\section{Operator Learning}
+
+Operator learning refers to the use of neural networks to approximate mappings between function spaces, rather than between finite-dimensional vectors as is done for classical neural network approaches \cite{kovachki_neural_2023}. This setting arises naturally in scientific computing, where many problems can be formulated in terms of operators acting on functions.
+
+A particularly important example is the solution operator of a parametric partial differential equation (PDE). Consider a PDE of the form:
+\begin{equation}
+\mathcal{N}(a, u)(x) = f(x), \quad x \in \Omega, \qquad u(x) = 0, \quad x \in \partial \Omega,
+\end{equation}
+where $\Omega \subset \mathbb{R}^d$ is a bounded domain, $\mathcal{N}$ is a differential operator, $a$ is an input function, $f$ is an external term like a forcing term, and $u$ is the solution.
+
+The corresponding solution operator is defined as:
+\begin{equation}
+\mathcal{G}(a) = u,
+\end{equation}
+which maps an input function $a$ to the solution $u$. The goal of operator learning is to approximate this mapping directly using surrogate modeling. 
+
+Let $\mathcal{A}$ and $\mathcal{U}$ denote appropriate function spaces for the input and output, respectively. Given a dataset of input-output pairs:
+\begin{equation}
+\{(a_j, u_j)\}_{j=1}^{N_{\text{data}}}, \quad u_j = \mathcal{G}(a_j),
+\end{equation}
+where the inputs $a_j$ are sampled from a distribution $\mu$ over $\mathcal{A}$, the objective is to learn a parametric approximation $\mathcal{G}_\theta : \mathcal{A} \to \mathcal{U}$ by minimizing the expected error
+\begin{equation}
+\mathbb{E}_{a \sim \mu} \left[ \| \mathcal{G}(a) - \mathcal{G}_\theta(a) \|_{\mathcal{U}}^2 \right],
+\end{equation}
+which in practice is approximated by the empirical loss over the dataset.
+
+A key distinction from standard learning problems is that the objects of interest are functions rather than finite-dimensional vectors, even though in practice they are only observed through discrete samples. Consequently, the learning problem is formulated at the level of a continuous operator, while training is carried out on its discretized representations. This makes it essential to understand what information about a function is preserved under discretization. 
+
+\subsection{Bandlimitedness and Continuous--Discrete Equivalence}\label{sec:bandlimitedness}
+
+A central question in operator learning is what information about a continuous function is preserved when it is represented through discrete samples. Sampling theory provides a framework for answering this question, by characterizing when a function can be uniquely reconstructed from its values on a discrete grid.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/aliasing.png}
+    \caption{\label{fig:aliasing} an illustration of aliasing. The blue curve represents a high-frequency signal, while the red curve is a lower-frequency function that passes through the same sampled points (black dots). Since both functions agree at the sampling locations, the discrete representation cannot distinguish between them.}
+\end{figure}
+
+Let $f \in L^2(\mathbb{R})$ be a square-integrable function with Fourier transform $\hat{f}$. The function is said to be \textit{bandlimited} with bandlimit $\Omega > 0$ if its Fourier transform is supported only on a finite interval:
+\begin{equation}
+\mathrm{supp}(\hat{f}) \subset [-\Omega, \Omega].
+\end{equation}
+
+The Whittaker-Shannon sampling theorem states that a bandlimited function can be exactly reconstructed from its values on a uniform grid, provided the sampling rate is sufficiently high \cite{signals-and-systems}. Specifically, if the function is sampled at points $\{f(nT)\}_{n \in \mathbb{Z}}$, then exact reconstruction is possible if
+\begin{equation}
+\frac{1}{T} \geq 2\Omega,
+\end{equation}
+where $1/T$ is the sampling frequency and $2\Omega$ is called the Nyquist rate.
+
+Under this condition, the function can be reconstructed via the interpolation formula
+\begin{equation}
+f(x) = \sum_{n \in \mathbb{Z}} f(nT)\,\mathrm{sinc}\left(\frac{x - nT}{T}\right),
+\end{equation}
+where $\mathrm{sinc}(x) = \frac{\sin(\pi x)}{\pi x}$.
+
+This result establishes a form of continuous-discrete equivalence: if a function is bandlimited and sampled above the Nyquist rate, then its discrete samples contain all the information required to reconstruct the original function. In this case, the discretization is effectively lossless.
+
+However, if the sampling rate is below the Nyquist rate, this equivalence breaks down. In this case, different continuous functions can produce exactly the same set of discrete samples, meaning that the original function can no longer be uniquely reconstructed from the sampled data.
+
+This phenomenon is known as aliasing. Intuitively, aliasing occurs when oscillations in the function are too rapid relative to the spacing between sample points. If the grid is too coarse, the samples cannot resolve the true high-frequency behavior, and the function appears to vary more slowly than it actually does. 
+
+Figure~\ref{fig:aliasing} illustrates this effect. The blue curve represents a high-frequency signal, while the red curve is a much lower-frequency function passing through the same sampled points. Since both functions agree exactly at the sampling locations, the discrete representation cannot distinguish between them. From the perspective of the sampled data, the high-frequency signal is therefore indistinguishable from its lower-frequency alias.
+
+From a Fourier perspective, a sampled grid can only represent frequencies up to the Nyquist limit
+\begin{equation}
+\omega_N = \frac{\pi}{T},
+\end{equation}
+where $T$ is the spacing between sample points. Frequencies satisfying
+\begin{equation}
+|\omega| \leq \omega_N
+\end{equation}
+can be represented uniquely, while frequencies above this limit cannot.
+
+Consider a sinusoidal component
+\begin{equation}
+f(x) = \sin(\omega x).
+\end{equation}
+Sampling this function at points $x_n = nT$ gives
+\begin{equation}
+f(nT) = \sin(\omega nT).
+\end{equation}
+
+If $\omega > \omega_N$, there exists a lower frequency $\omega_{\mathrm{alias}} \leq \omega_N$ such that
+\begin{equation}
+\sin(\omega nT) = \sin(\omega_{\mathrm{alias}} nT)
+\end{equation}
+for all sample points $n$. A common expression for this aliased frequency is
+\begin{equation}
+\omega_{\mathrm{alias}} = |\omega - 2k\omega_N|,
+\end{equation}
+for some integer $k$ chosen so that
+\begin{equation}
+0 \leq \omega_{\mathrm{alias}} \leq \omega_N.
+\end{equation}
+
+This shows that frequencies above the Nyquist limit do not simply disappear. Instead, they are systematically and deterministically mapped onto lower frequencies that the grid can represent. Aliasing is therefore not random noise, but a predictable distortion of the frequency content.
+
+The consequence is that information above the Nyquist limit is irreversibly lost. Once aliasing has occurred, the sampled data contains a distorted representation of the original function, where unresolved high-frequency behavior is interpreted as physically different low-frequency structure. No learning algorithm can reconstruct frequency content that is absent from the discretized data, regardless of model complexity or architecture \cite{bartolucci-discretization-invariance}.
+
+
+\subsection{Discretization Invariance}
+
+The discussion in Section \ref{sec:bandlimitedness} shows that learning from discretized data is fundamentally constrained by the information preserved under sampling. Even if a model is intended to approximate a continuous operator, it is trained and evaluated on finite representations of functions. This raises the question of whether the learned model depends only on the underlying function, or also on the particular discretization used to represent it.
+
+This property is commonly referred to as discretization invariance. Informally, a discretization-invariant model should produce consistent predictions when the same underlying function is represented on different grids, provided those discretizations sufficiently resolve the relevant features of the problem.
+
+In practice, discretization invariance is most naturally interpreted for functions represented on uniform Cartesian grids, where resolution can be clearly defined through grid spacing. In this setting, it refers to the ability of a model trained at one resolution to make accurate predictions at other resolutions of the same underlying problem.
+
+A widely used characterization of neural operators is given by Kovachki et al. \cite{kovachki_neural_2023}, who state that a model should satisfy three key properties:
+
+\begin{enumerate}
+    \item \textbf{Discretization flexibility:} the model can accept inputs defined on arbitrary discretizations of the domain.
+    
+    \item \textbf{Pointwise evaluation:} the model can be evaluated at arbitrary output locations.
+    
+    \item \textbf{Continuum consistency:} as the discretization is refined, the learned operator converges to the underlying continuous operator being approximated.
+\end{enumerate}
+
+These properties formalize the idea that a neural operator should approximate a mapping between functions, rather than a mapping between specific finite-dimensional representations. In particular, the learned operator should depend on the underlying continuous object and not on the resolution, ordering, or structure of the grid used to represent it.
+
+Since training data is always discretized, a model is never directly exposed to the continuous operator itself, but only to finite samples of its input and output functions. If refining the discretization changes the behavior of the model rather than improving the approximation of the same underlying mapping, the model becomes tied to the representation used during training rather than to the operator itself. As a result, performance may degrade significantly when evaluated on different resolutions or different discretizations of the same problem. This phenomenon is commonly referred to as \textit{discretization mismatch} \cite{gao_discretization_2023}.
+
+Discretization invariance is therefore a central criterion for evaluating neural operator architectures. In this thesis, it is used both as a theoretical lens and as an empirical measure for comparing models across changes in resolution and, later, across transitions from regular grids to irregular point clouds.
+
