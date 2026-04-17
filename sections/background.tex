@@ -94,7 +94,7 @@ FINAL VERSION:
 
 \section{Operator Learning}
 
-Operator learning refers to the use of neural networks to approximate mappings between function spaces, rather than between finite-dimensional vectors as is done for classical neural network approaches \cite{kovachki_neural_2023}. This setting arises naturally in scientific computing, where many problems can be formulated in terms of operators acting on functions.
+Operator learning refers to the use of neural networks to approximate mappings between function spaces, rather than between finite-dimensional vectors as is done for classical neural network approaches \cite{neural-operators}. This setting arises naturally in scientific computing, where many problems can be formulated in terms of operators acting on functions.
 
 A particularly important example is the solution operator of a parametric partial differential equation (PDE). Consider a PDE of the form:
 \begin{equation}
@@ -200,7 +200,7 @@ This property is commonly referred to as discretization invariance. Informally, 
 
 In practice, discretization invariance is most naturally interpreted for functions represented on uniform Cartesian grids, where resolution can be clearly defined through grid spacing. In this setting, it refers to the ability of a model trained at one resolution to make accurate predictions at other resolutions of the same underlying problem.
 
-A widely used characterization of neural operators is given by Kovachki et al. \cite{kovachki_neural_2023}, who state that a model should satisfy three key properties:
+A widely used characterization of neural operators is given by Kovachki et al. \cite{neural-operators}, who state that a model should satisfy three key properties:
 
 \begin{enumerate}
     \item \textbf{Discretization flexibility:} the model can accept inputs defined on arbitrary discretizations of the domain.
