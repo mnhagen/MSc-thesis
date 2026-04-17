@@ -43,6 +43,8 @@ The dataset consists of 1000 samples generated at a resolution of $256 \times 25
 
 Further details on the data-generation procedure are provided in Appendix~\ref{navier-details}.
 
+ADD SOMETHING MORE HERE: mention that we saw some strange behavior for the geo-FNO, namely the central artifact/seam in predictions for all datasets. As part of the troubleshooting process, we generated different versions of the Navier-stokes dataset with different sampling patterns. In addition to the uniform grid seen above, a central-clustered, left-clustered and near uniform grid were produced. This dataset is well suited for this purpose as the initial condition is generated in Fourier space, which is continuously defined in physical space. This lets us generate the same underlying physical dataset on different spatial discretizations, which is not possible for the other datasets. Refer to whatever section you end up explaining the seam and how it was fixed in. Decide if this was actually useful for troubleshooting purposes or not and whether to include it, but if you do, it should be mentioned here.
+
 \subsubsection{Darcy flow}\label{darcy-flow}
 
 Also used for the uniform grid experiments is the Darcy flow dataset introduced by Li et al.\cite{li2021fno}. 
@@ -72,7 +74,7 @@ on the unit square, governed by the following PDE:
 
 
 
-\subsection{Non-uniform datasets}
+\subsection{Non-uniform datasets}\label{non-uniform-datasets}
 
 The experiments on irregular domains primarily use two datasets: an incompressible Euler
 dataset modeling flow past a cylinder and a nuclear engineering
@@ -93,9 +95,9 @@ Cartesian grid. The main text should also cite the original source and
 report the experimental resolution or mesh representation at the level
 needed to interpret the results.
 
-Should I inlclu
+Should I include this at all? maybe for the troubleshooting section for finding the seam. Maybe add another subsection after non uniform grids called troubleshooting grids where I just add elasticity and non uniform NS
 
-\subsubsection{Incompressible Navier-Stokes flow past a cylinder}
+\subsubsection{Incompressible Navier-Stokes flow past a cylinder}\label{cylinder-flow-dataset}
 
 \begin{figure}
     \label{fig:cylinder-flow}
@@ -103,8 +105,7 @@ Should I inlclu
     \includegraphics[width=0.9\textwidth]{figures/cylinder_flow_input_output.png}
     \caption{ Example initial and final states
     for the incompressible flow past a cylinder dataset, shown on the
-    irregular geometry together with the underlying point cloud. The
-    color scale represents the speed $\lVert \mathbf{v} \rVert$.}
+    irregular geometry together with the underlying point cloud. While the model is tasked with predicting the $v_x$ and $v_y$ components of the velocity field, these plots display the speed $\lVert \mathbf{v} \rVert$.}
 \end{figure}
 
 A second non-uniform benchmark is an incompressible Navier-Stokes dataset
@@ -140,7 +141,7 @@ on a non-uniform spatial discretization rather than a regular Cartesian
 grid. An example initial-final pair is shown in
 Figure~\ref{fig:cylinder-flow}. The dataset consists of 1000 samples each containing between 1700 and 2100 points, depending on the geometry of the sample. 200 of these samples were designated for testing, while the remaining 800 were used for training.
 
-\subsubsection{HTGR column temperature dataset}
+\subsubsection{HTGR column temperature dataset}\label{htgr-column-dataset}
 
 \begin{figure}
     \centering
@@ -188,28 +189,6 @@ two-dimensional temperature profile within that layer. An example of
 such a slice, together with the underlying irregular mesh, is shown in
 Figure~\ref{fig:htgr-column}.
 
-The train-validation-test split is constructed by excluding specific
-boundary temperatures and specific $z$-levels from training, rather than
-by applying a conventional random split. As a result, the held-out data
-contains samples with unseen temperatures, unseen axial levels, or both,
-making the evaluation more demanding by explicitly testing the model's
-ability to generalize across both thermal conditions and spatial
-positions.
-
-Since the model input is limited to the axial level $z$ and the boundary
-temperature $T$, the raw representation is relatively simple and may not
-be sufficiently expressive for learning the underlying mapping. For this
-reason, feature engineering was used to construct an expanded
-representation of the input variables before training. Feature
-engineering refers to the transformation or augmentation of raw input
-variables into a representation that is more informative for the
-learning algorithm, and prior work has shown that such feature
-engineering can improve predictive performance
-\cite{feature-engineering}. The exact form of this representation, as
-well as a comparison of model performance across different input
-encodings, is presented in
-Appendix~\ref{appendix:htgr-input-engineering}.
-
 
 \section{Training setup}
 
@@ -218,12 +197,11 @@ samples from the datasets described above. For most datasets, the data is
 split into a training set and a held-out evaluation set. The training set
 is used to optimize the model parameters, while the held-out set is used
 to monitor performance during training and to report final model
-performance. For the HTGR column temperature dataset, a separate
-train-validation-test split is used, constructed by holding out specific
-boundary temperatures and axial levels as described above.
+performance. 
 
-The exact hyperparameters differ between the uniform-grid and
-non-uniform-grid experiments and between datasets. To keep the main text focused on the experimental
+
+The hyperparameters differ between the uniform-grid and
+non-uniform-grid experiments, as well as between datasets. To keep the main text focused on the experimental
 design rather than implementation details, full hyperparameter settings,
 including learning rates, batch sizes, training epochs, and architecture
 parameters, are given in Appendix~\ref{appendix:hyperparameters}.
@@ -292,17 +270,42 @@ only a measure of consistency across resolutions, not of absolute model
 quality. The loss values themselves remain the primary measure of predictive performance, while $D$ is used only as a quantitative measure of discretization robustness.
 
 
-\section{Non-uniform-grid experiments}
+\section{Non-uniform-grid geo-FNO evaluations}\label{non-uniform-experiments}
 
-The non-uniform-grid experiments evaluate geo-FNO on datasets whose
-spatial sampling locations do not lie on a regular Cartesian grid. In
-these experiments, the model is trained and tested on the same underlying
-point cloud or mesh associated with each dataset, so no grid-based
-resampling step is required when computing the prediction error.
+The non-uniform-grid evaluations use geo-FNO on the cylinder flow and
+HTGR column temperature datasets described in
+Section~\ref{non-uniform-datasets}. These evaluations differ from the
+uniform-grid resolution transfer experiments in
+Section~\ref{uniform-experiments}. Since the spatial samples are given
+as point clouds or irregular meshes rather than Cartesian grids, there
+is no single resolution parameter equivalent to the grid size $N$ used
+in the uniform-grid experiments. The goal is therefore not to measure
+resolution transfer, but to evaluate whether geo-FNO can learn mappings
+on irregular spatial data.
 
-Because the point cloud is fixed within each non-uniform dataset, these
-experiments do not test discretization invariance in the same
-resolution-transfer sense as the uniform-grid experiments. REFER TO SECTION DISCUSSING DISCRETIZATION INVARIANCE AND ITS EXTENSION/CONNECTION TO NON-UNIFORM GRIDS. Instead, they
-test whether geo-FNO can learn mappings on irregular spatial data and
-generalize to held-out samples, boundary conditions, time steps, axial
-levels, or material configurations, depending on the dataset.
+For the HTGR column temperature dataset, a separate
+train-validation-test split is used. The split is constructed over
+individual two-dimensional slice samples, where each sample corresponds
+to one combination of boundary temperature and axial level. Unlike a
+random split, the validation and test samples are selected using fixed
+subsets of the $(z,T)$ input space.
+
+The input to the HTGR model consists of the boundary temperature $T$ and
+the axial level $z$. Since this raw representation is low-dimensional,
+multiple input representations were tested using feature engineering.
+Feature engineering refers to the transformation or augmentation of raw
+input variables into a representation that is more informative for the
+machine learning model, and prior work has shown that such feature
+engineering can improve predictive performance \cite{feature-engineering}. 
+A subset of the input representations tested for the
+HTGR dataset, and their effect on model performance, are presented in
+Appendix~\ref{appendix:htgr-input-engineering}.
+
+The non-uniform-grid results should therefore be interpreted as
+held-out-data evaluations of geo-FNO on irregular spatial
+representations, rather than as a direct analogue of the uniform-grid
+discretization-invariance study. Implementation issues encountered
+during development, including the seam artifact observed in early
+geo-FNO predictions, are discussed separately in
+Appendix~\ref{geo-fno-seam}. The results in the main text are reported
+using the corrected implementation.

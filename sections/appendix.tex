@@ -103,77 +103,79 @@ would improve predictive performance.
 
 Table~\ref{tab:htgr-input-engineering} shows a representative subset of
 the tested input representations. The raw representation $(z,T)$ already
-performs well, with a test relative RMSE of $9.10 \times 10^{-3}$.
-Normalizing the same two variables does not improve performance in this
-case, and instead gives a slightly higher test relative RMSE of
-$9.51 \times 10^{-3}$. This suggests that normalization alone is not
-necessarily beneficial for this dataset, and that the model may benefit
-from access to the original numerical scale of the axial position and
-boundary temperature.
+performs reasonably well, with a test relative RMSE of
+$3.75 \times 10^{-3}$. Replacing these raw variables with min--max
+normalized variables,
+\[
+    \hat z = \frac{z-z_{\min}}{z_{\max}-z_{\min}}, \qquad
+    \hat T = \frac{T-T_{\min}}{T_{\max}-T_{\min}},
+\]
+scales both inputs to the range $[0,1]$. This improves the test relative
+RMSE to $2.57 \times 10^{-3}$ and reduces the test MSE by approximately
+a factor of two. Thus, for this dataset, giving the model inputs on a
+common bounded scale is beneficial.
 
-The best-performing representation among the tested configurations is
-the normalized polynomial encoding $(z,T,z^2,T^2,zT)$, which reduces the
-test relative RMSE to $9.46 \times 10^{-4}$. The added polynomial terms
-are not intended to represent new physical variables, and in particular
-$z^2$ and $T^2$ should not be interpreted as directly meaningful
-physical quantities for this problem. Instead, they provide the model
-with a richer representation of the simple scalar inputs, making certain
-nonlinear dependencies easier to learn. The fact that the basic
-normalized representation performs worse than the raw input, while the
-normalized polynomial representation performs best, also illustrates that
-the effect of feature engineering choices is not always straightforward.
+The next representation augments the min--max normalized variables with
+quadratic and interaction terms, giving
+$(\hat z,\hat T,\hat z^2,\hat T^2,\hat z\hat T)$. This further reduces
+the test relative RMSE to $2.44 \times 10^{-3}$, although the improvement
+over the basic min--max normalized representation is modest. This is
+consistent with the fact that $\hat z^2$ and $\hat T^2$ are not physically meaningful variables for this problem. Instead, they provide a simple
+polynomial expansion of the two scalar inputs, making some nonlinear
+dependencies easier for the model to represent.
 
-A second engineered representation was tested using features with a
-clearer connection to the geometry of the problem:
-$(z,T,\sin(\pi(z-z_{\min})/L_z),T\sin(\pi(z-z_{\min})/L_z),
-\cos(\pi(z-z_{\min})/L_z))$. The sine terms vanish at the axial
-boundaries, while the cosine term equals one at the boundaries, giving
-the model access to features that encode boundary-aware structure in the
-$z$ direction. This representation achieves a test relative RMSE of
-$2.58 \times 10^{-3}$, substantially improving over the raw
-representation but not matching the normalized polynomial model. It also
-converged in substantially less time in this experiment. This result
-suggests that physically motivated feature choices can be effective, but
-also that physical interpretability alone does not guarantee the best
-empirical performance.
+Finally, a trigonometric representation was tested using the min--max
+normalized variables together with boundary-aware functions of the axial
+coordinate:
+$(\hat z,\hat T,\sin(\pi(z-z_{\min})/L_z),
+\cos(\pi(z-z_{\min})/L_z),\hat z\hat T)$, where
+$L_z=z_{\max}-z_{\min}$. This choice is more directly motivated by the
+structure of the data. In particular, the sine term vanishes at the
+axial boundaries, which reflects the observed trend that the peak
+temperature varies smoothly with $z$. The cosine term provides a complementary axial feature, and
+the interaction term $\hat z\hat T$ gives the model direct access to
+coupled dependence on axial position and boundary temperature.
 
-Overall, these results show that the choice of input representation has
-a significant effect on the HTGR prediction task. The normalized
-polynomial representation performs best among the configurations shown
-here, while the boundary-aware trigonometric representation provides a
-useful comparison: it is physically easier to motivate and improves over
-the raw input, but does not reach the same accuracy as the best
-polynomial encoding.
+The trigonometric representation gives the best performance among the
+tested configurations, with a test relative RMSE of
+$2.07 \times 10^{-3}$. This shows that using physical understanding
+of the dataset in the input representation can improve the Geo-FNO
+prediction accuracy. The trigonometric representation
+was therefore used for the HTGR results reported in the main text.
 
 \begin{table}[t]
     \centering
     \caption{\label{tab:htgr-input-engineering} Performance comparison
     of selected input representations for the HTGR column temperature
     dataset.}
-    \begin{tabular}{llll}
+    \begin{tabular}{lll}
         \hline
         Input representation & Val relRMSE  & Test relRMSE / MSE \\
         \hline
         $(z, T)$ &
-        $8.623981 \times 10^{-3}$  &
-        $9.102986 \times 10^{-3}$ / $5.212278 \times 10^{1}$ \\
+        $3.334622 \times 10^{-3}$  &
+        $3.752964 \times 10^{-3}$ / $7.120657 \times 10^{0}$ \\
 
-        normalized $(z, T)$ &
-        $1.018177 \times 10^{-2}$  &
-        $9.513722 \times 10^{-3}$ / $5.942555 \times 10^{1}$ \\
+        min--max normalized $(\hat z, \hat T)$ &
+        $3.124016 \times 10^{-3}$  &
+        $2.573528 \times 10^{-3}$ / $3.468112 \times 10^{0}$ \\
 
-        normalized $(z, T, z^2, T^2, zT)$ &
-        $9.223184 \times 10^{-4}$  &
-        $9.462218 \times 10^{-4}$ / $5.422029 \times 10^{-1}$ \\
+        min--max normalized
+        $(\hat z, \hat T, \hat z^2, \hat T^2, \hat z\hat T)$ &
+        $2.925913 \times 10^{-3}$  &
+        $2.443143 \times 10^{-3}$ / $2.997041 \times 10^{0}$ \\
 
-        $(z, T, \sin(\pi(z-z_{\min})/L_z), T\sin(\pi(z-z_{\min})/L_z),
-        \cos(\pi(z-z_{\min})/L_z))$ &
-        $2.472064 \times 10^{-3}$ &
-        $2.579207 \times 10^{-3}$ / $4.031768 \times 10^{0}$ \\
+        $(\hat z, \hat T, \sin(\pi(z-z_{\min})/L_z),
+        \cos(\pi(z-z_{\min})/L_z), \hat z\hat T)$ &
+        $2.105979 \times 10^{-3}$ &
+        $2.074195 \times 10^{-3}$ / $2.180137 \times 10^{0}$ \\
         \hline
     \end{tabular}
 \end{table}
 
+
 \chapter{Hyperparameters}\label{appendix:hyperparameters}
 
 This appendix provides a complete list of the hyperparameters used for each model and dataset in the experiments described in Chapter~\ref{cha:method}. The hyperparameters include architectural choices, training settings, and any dataset-specific parameters that were relevant for model performance. The listed hyperpameters were determined through a combination of prior literature, preliminary experiments, and manual tuning to achieve good performance.
+
+\chapter{Geo-FNO bug fix}\label{geo-fno-seam}

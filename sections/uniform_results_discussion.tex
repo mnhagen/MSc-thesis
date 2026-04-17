@@ -1,8 +1,12 @@
 \chapter{\label{uniform-results-discussion} Uniform grids - Results and Discussion}
 
-\section{Navier-Stokes}
+\section{results}
+
+\subsection{Navier-Stokes}
 
 IMPORTANT: mention again somewhere that the navier stokes dataset is synthetic. This is necessary to understand some of the results, like how FNO\_k16 performs so much better than FNO\_k8 for Navier-Stokes than it does for Darcy flow. It also explains why the the FNO\_k16 with added resampling onto a fixed internal grid becomes a flat line. not only is this just a good way to improve the performance of the FNO, but the 16 modes covers the bandwidth of the dataset, thus the model performs as well as it does on any resolution greater than 32x32.
+
+ALSO: SHOW SINGULAR PLOTS OF MODEL PREDICTIONS VS GROUND TRUTH + DIFFERENCE PLOT.
 
 \begin{figure}
     \centering
@@ -55,7 +59,7 @@ resolutions.
 
 
 
-\section{Darcy flow}
+\subsection{Darcy flow}
 
 \begin{figure}
     \centering
@@ -130,6 +134,29 @@ implicit multiscale structure in producing steadier behavior across
 resolutions.
 
 \subsection{improving the FNO}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/improving_fno.png}
+    \caption{\label{fig:improving-fno} A plot of the MSE loss for four FNOs trained on the Navier-Stokes dataset. FNO is the standard FNO; the other models have been modified to include resampling onto a fixed internal grid and/or use the UND block used by the CNO. The training resolution is indicated by the vertical dashed line.}
+\end{figure}
+
+\begin{table}
+    \centering
+    \caption{\label{tab:d-values-navier-stokes-improved-fno} Discretization robustness score $D$ for the FNOs modified to improve discretization robustness on the Navier-Stokes dataset.}
+    \begin{tabular}{lc}
+        \hline
+        Model & $D$ \\
+        \hline
+        FNO & 3.4817 \\
+        FNO\_UND & 3.4800 \\
+        FNO\_resample & 0.0490 \\
+        FNO\_resample\_UND & 0.0456 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+MENTION THAT ALL FNOS WERE GIVEN 16 MODES AND THAT RESAMPLING ONTO A FIXED INTERNAL GRID PERFORMS SO WELL BECAUSE THE 16 MODES COVER THE BANDWIDTH OF THE DATASET = CONSEQUENCE OF ARTIFICIAL DATA.
 
 include the FNOs with UND and/or resampling onto an internal grid as a way to mitigate the discretization effects.
 

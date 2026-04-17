@@ -5,6 +5,8 @@ remainder of the thesis. It first places operator learning in context
 with more classical learning setups and then discusses the neural
 operator architectures that are central to this work.
 
+SOMEWHERE IN HERE: explain bandlimits/nyquist frequency and how this relates to the resolution of the data and the model's ability to learn the underlying operator. This is a key concept that motivates the CNO architecture and its stability across resolutions, as well as the challenges faced by FNO when dealing with high-frequency information that may not be well-resolved in the training data.
+
 \section{Operator Learning}
 
 This section introduces operator learning as a mapping between
@@ -63,7 +65,7 @@ support more consistent behavior across discretizations. Discuss how this means 
 \subsection{Local versus global inductive bias}
 
 Compare the locality of convolutional operators with the global spectral
-bias of FNO and connect this to the later experiments.
+bias of FNO.
 
 \section{Mesh-free Operator Learning and geo-FNO}
 
@@ -80,6 +82,8 @@ operators.
 
 Describe the geo-FNO approach and how it extends Fourier-based operator
 learning to non-uniform meshes.
+
+explain the architecture itself and that it is a generalization of FNO that collapses back to FNO when the input points are on a regular grid. Also mention that you can just interpolate the input data to a regular grid and use FNO, but this is not ideal because it can introduce interpolation errors and does not leverage the potential advantages of learning directly on the original point cloud. cite the geo fno paper that tested this and found lower loss when learning directly on the point cloud with geo-FNO compared to interpolating to a regular grid and using FNO.
 
 \section{Discretization invariance on mesh-free grids}
 
