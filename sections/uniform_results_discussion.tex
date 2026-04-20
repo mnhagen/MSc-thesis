@@ -33,7 +33,7 @@ The four models outlined in Section~\ref{uniform-experiments} were
 evaluated on the Navier-Stokes dataset. Figure~\ref{fig:loss_vs_resolution_navier_stokes}
 shows the MSE loss as a function of evaluation resolution for each
 model, with the training resolution indicated by the vertical dashed
-line. Table~\ref{tab:di-values-navier-stokes} reports the discretization
+line. Table~\ref{tab:d-values-navier-stokes} reports the discretization
 robustness score $D$, which measures how much the loss changes across
 resolutions relative to the loss at the training resolution.
 
@@ -122,16 +122,30 @@ differences between the models and explain why we see the patterns we do in the 
 
 \subsection{FNO}
 
-Discuss spectral truncation and the fact that Fourier mode index does
-not preserve the same physical meaning when the discretization changes.
+The FNOs perform poorly in terms of discretization invariance on both datasets. On Navier-Stokes, FNO_k8 has a comparable D-value to the CNOs, albeit with a significantly higher loss on all tested resolutions. This poor discretization invariance is due to the meaning of each mode being dependent on the spatial resolution. The FNO is only ever exposed to a single resolution during training, and thus learns an equivalence between a mode's index and its physical meaning. however, this does not necessarily hold under resolution transfers. when moving to higher resolutions, more modes are resolvable, which changes the energy distribution among modes. at resolutions different from testing, this implicit equivalence between physical meaning and mode index falls apart, leading to poor performance. (is this the whole story? comment on this). 
 
-Mention that the results
+On the darcy flow dataset, we see that FNO_k8 performs better at lower resolutions. This is because, at lower resolutions, the frequencies that FNO_k16 retains but FNO_k8 discards are junk data caused by interpolation errors. As such, this data is not useful for making predictions, and relying on them causes lower performance overall. The FNO_k8, which does not use these modes, performs better than the FNO_k16 that does. at resolutions at or above training, these modes are well resolved, and accessing them allows FNO_k16 to make more accurate predictions than FNO_k8. (again, is this the whole story? is it just interpolation errors causing this? or are there also other problems like poorly resolved modes, aliasing etc.)
+
+the FNO's performance drops off faster at lower resolutions than at equally larger resolutions. (why? I do not remember.)
+
+Mention that FNO on navier stokes performs artificially well. the dataset is generated in fourier space with 16 modes, so an FNO retaining 16 modes in each direction is naturally suited to this prediction task. 
 
 \subsection{CNO}
 
 Discuss the role of locality, the bandlimited assumption, and the
 implicit multiscale structure in producing steadier behavior across
 resolutions.
+
+As the CNO always resamples onto the same internal grid, the model is very stable. on darcy flow, the loss remains almost constant at lower resolutions; this is because the solution operator and solution space for this dataset is very smooth, and thus the tested lower resolutions still capture sufficient detail. at higher resolutions, we see that the loss on both datasets increases almost linearly. this is because the CNO always bandlimits the input. the rate at which the loss increases when testing at higher resolutions is therefore proportional to the rate at which the bandlimited approximation diverges from the "true" field. 
+
+We observe that the inclusion of the UND block improves performance for the CNO at all tested resolutions except high resolutions on the Navier-Stokes dataset specifically. This can be understood by considering what exactly the UND block does. As described in section \ref{cno architecture section}, the goal is to make the model more discretization invariant by not letting higher frequency content created by the nonlinearity fold into the retained modes. however, as mentioned in the theory section, the low pass filter applied during the downsampling back to the original resolution is not ideal. The utilized low pass filter effectively works by smoothing dataset, which works to erase high frequency content. While this works well to remove unresolved modes, it also affects and smooths the highest retained modes. This means that the highest retained modes are no longer available to the model to the same extent they would be without the smoothing. In other words, the inclusion of the UND block effectively applies an even stricter bandlimit to the input representation than the one enforced by the initial resampling. For the Darcy flow dataset, this has little consequence; the operator is heavily smoothing, so low frequency content dominates the solution space. Diminished access to the highest modes is therefore not detrimental. This is, however, not the case for the highly non-linear Navier-Stokes. The loss increase for CNO when tested at higher resolution is approximately linear on Navier-Stokes, and as already mentioned, the rate of loss increase is tied to the rate at which the training representation diverges from the higher bandwidth representations. as the CNO_no_UND effectively retains access to more modes, it stands to reason that it diverges from higher bandwidth representations slower. Despite this, the inclusion of the UND block is encouraged as it improves performance in most cases and is mathematically sound.
+
+
+
+
+I fear I speak too much in frequencies here, when it's not clear why this would be the relevant lens through which to look at the CNO. is there a more physical explanation that works? should i have a disclaimer about this? or would a reader in this field be fine with this way of looking at this
+
+
 
 \subsection{improving the FNO}
 
@@ -156,13 +170,6 @@ resolutions.
     \end{tabular}
 \end{table}
 
-MENTION THAT ALL FNOS WERE GIVEN 16 MODES AND THAT RESAMPLING ONTO A FIXED INTERNAL GRID PERFORMS SO WELL BECAUSE THE 16 MODES COVER THE BANDWIDTH OF THE DATASET = CONSEQUENCE OF ARTIFICIAL DATA.
+The FNO was modified to include parts of the CNO deemed responsible for its superior discretization invariance. These parts were found to be the UND block and the resampling onto a fixed grid. Four FNOs were examined; a standard FNO, an FNO with UND, an FNO with resampling, and an FNO with both UND and resampling. The models all retained 16 modes in each direction and were trained and tested on the Navier-Stokes dataset. The loss under resolution change was then tested with the results seen in figure \ref{fig:improving-fno} and the corresponding D-values in table \ref{tab:d-values-navier-stokes-improved-fno}. 
 
-include the FNOs with UND and/or resampling onto an internal grid as a way to mitigate the discretization effects.
-
-\subsection{Connection to theory}
-
-Tie the empirical behavior back to the contrast between bandlimiting
-and Fourier truncation. 
-
-Is this section necessary? decide whether a last section to summarize/compare the two methods is necessary, or whether the discussion can be integrated into the interpretation of the results for each method.
+The UND block had a neglible, but positive, impact. The D-values are slightly lower for the FNOs with UND when compared to the equivalent FNO without. This shows aliasing is an issue, but that it is not the primary failure mechanism causing the poor discretization invariance. Much more notably, the FNOs with resampling show a dramatic improvement in discretization robustness.  The D-values for the FNOs with resampling are an order of magnitude lower than those without. This is because it fixes the problem outlined in section \ref{fno subsection}: the equivalence between mode index and physical meaning. By resampling onto a fixed internal grid, this equivalence is restored, even when testing the model at different resolutions. By implementing parts of the CNO architecture, the FNO's performance under resolution transfer is dramatically improved.

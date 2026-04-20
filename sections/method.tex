@@ -293,21 +293,10 @@ predictive performance \cite{feature-engineering}.
 
 TO BE EXPLAINED HERE: CONNECT CYLINDER FLOW TO THEORY ON GEO-FNO. EXPLAIN THAT "CODE" HERE IS THE X AND Y COORDINATES OF THE CYLINDER'S CENTER AND ITS RADIUS. THIS IS SEPARATE FROM THE POINTWISE QUANTITIES OUTLINED IN THE FEATURE ENGINEERING APPENDIX
 
-Feature engineering was used in the non-uniform experiments to augment
-the raw model inputs with additional variables that make relevant
-structure in the data more explicit. In general, feature engineering
-refers to the transformation or augmentation of raw input variables into
-representations that are more informative for a machine learning model,
-and prior work has shown that such transformations can improve
-predictive performance \cite{feature-engineering}.
-
-TO BE EXPLAINED HERE: CONNECT CYLINDER FLOW TO THEORY ON GEO-FNO. EXPLAIN THAT "CODE" HERE IS THE X AND Y COORDINATES OF THE CYLINDER'S CENTER AND ITS RADIUS. THIS IS SEPARATE FROM THE POINTWISE QUANTITIES OUTLINED IN THE FEATURE ENGINEERING APPENDIX
-
 For the cylinder flow dataset, the model did not produce meaningful
 predictions when it was given only the velocity field on the irregular
-mesh. The input was therefore augmented with geometric information from
-the dataset. In addition to the horizontal and vertical velocity
-components, each mesh point was assigned a one-hot encoding of its node
+mesh. The coordinate transform MLP $\phi^{-1}$ was given the x and y coordinates of the cylinder's center and its radius. In addition to the horizontal and vertical velocity
+components, each mesh point was  also assigned a one-hot encoding of its node
 type. The node-type categories distinguish the upper, lower and cylinder boundary nodes, left boundary nodes, right boundary nodes, and interior nodes. This made the location of the obstacle more
 explicit in the pointwise input representation, allowing the model to
 identify which mesh points lie on or near the cylinder.

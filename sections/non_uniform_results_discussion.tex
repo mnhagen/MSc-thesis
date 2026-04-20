@@ -57,25 +57,9 @@ benchmark. Mention the varying geometry, varying point clouds, and the
 fact that the model must predict a vector field on an irregular spatial
 domain.
 
-Discuss the error structure in the representative prediction. If the
-largest errors occur in the wake or near the cylinder, connect this to
-regions with sharper gradients and more complex flow evolution.
+Discuss the error structure in the representative prediction. The largest source of error now is "steady state". not all samples appear to have reached a comparable steady or quasi-steady state by the final time. This is a dataset limitation, not model limitation. Some samples possess a tail that oscillates about a mean position at the final time. This is very hard for the "one shot" (I dont remember what its called, but a model that predicts the final state directly from the initial state instead of an auto rollout approach) geo-FNO to learn. This made the hyperparameter sweep quite difficult, as it was not expected for the model to manage to capture the transient behavior of the samples that had not reached a steady state, and the loss was very high for those samples.
 
-Discuss the observation that high-loss samples often correspond to cases
-that have not reached a comparable steady or quasi-steady state by the
-final time. This can be framed as a dataset limitation rather than only
-as a model limitation: the target mapping may be harder to learn when
-the final state represents different stages of the transient evolution
-for different geometries.
-
-Across the cylinder flow dataset, the model performance is affected by
-the fact that not all samples appear to have reached a comparable flow
-state by the final time. Samples that are farther from a steady or
-quasi-steady state are more difficult to predict, and contribute
-disproportionately to the overall error. This makes the reported loss a
-measure not only of the model's ability to represent the irregular
-geometry, but also of the variability in the temporal evolution present
-in the dataset.
+Other things to discuss? discuss where in the plot the loss is high. other?
 
 \subsection{HTGR column temperature dataset}
 
@@ -87,10 +71,7 @@ samples. The result therefore demonstrates that geo-FNO can be applied
 to reactor-relevant non-uniform data, but it does not by itself establish
 performance on more complex nuclear engineering datasets.
 
-Discuss the feature engineering results if they are important for the
-main argument, or refer to Appendix~\ref{appendix:htgr-input-engineering}
-if the detailed comparison would distract from the main non-uniform
-results.
+refer again to Appendix~\ref{appendix:htgr-input-engineering}?
 
 \subsection{Role of geo-FNO}
 
@@ -106,14 +87,4 @@ $\phi$ is useful to show. If $\phi$ helps explain the result or a failure
 mode, include it as a separate analysis figure. If it is not discussed
 directly, it is better left out of the main text or moved to an appendix.
 
-\subsection{Implementation artifact}
-
-Briefly mention the seam artifact only if it affects how the reader
-should interpret the results. The full debugging process can remain in
-Appendix~\ref{geo-fno-seam}. In the main text, it is enough to state
-that the reported results use the corrected implementation.
-
-
-
-
-for cylinder flow: main cause of high loss is samples not reaching steady state.
+is this section useful? is there anything else to talk about in this chapter? other things to discuss?
