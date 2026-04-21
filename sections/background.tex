@@ -5,93 +5,6 @@ remainder of the thesis. It first places operator learning in context
 with more classical learning setups and then discusses the neural
 operator architectures that are central to this work.
 
-SOMEWHERE IN HERE: explain bandlimits/nyquist frequency and how this relates to the resolution of the data and the model's ability to learn the underlying operator. This is a key concept that motivates the CNO architecture and its stability across resolutions, as well as the challenges faced by FNO when dealing with high-frequency information that may not be well-resolved in the training data.
-
-\section{From standard machine learning to Operator Learning}
-
-This section introduces operator learning as a mapping between
-functions, rather than the more familiar vector-to-vector setting. It
-should explain why this perspective is useful for PDE-governed physical
-systems and introduce the CDE concept that motivates resolution-aware
-learning.
-
-Introduce the continuous-domain view and connect it to the notion of
-discretization invariance used throughout the thesis.
-
-\subsection{Discretization Invariance}
-
-\section{Fourier Neural Operator}
-
-This section should explain the FNO architecture and the spectral
-convolution mechanism on which it is based.
-
-\subsection{Architecture}
-
-Describe the lifting layer, Fourier layers, spectral convolution,
-non-linear transformations, and projection back to the target field.
-
-\subsection{Strengths}
-
-Discuss the global receptive field, computational efficiency through
-FFT-based convolutions, and the suitability of FNO for smooth
-solution operators.
-
-\subsection{Weaknesses}
-
-Discuss spectral truncation, sensitivity to resolution changes, and
-the reliance on regular grids.
-
-\section{Convolutional Neural Operator}
-
-This section should explain the CNO architecture and the inductive
-biases that differentiate it from FNO.
-
-\subsection{Architecture}
-
-Describe the encoder-decoder style structure, convolutional blocks, and
-the way multi-scale processing is used.
-
-\subsection{Bandlimited assumption}
-
-Explain the bandlimited assumption and why it can stabilize learning and
-support more consistent behavior across discretizations. Discuss how this means explicitly discarding high-frequency information, where the FNO keeps it (but does not know what to do with it).
-
-\subsection{Local versus global inductive bias}
-
-Compare the locality of convolutional operators with the global spectral
-bias of FNO.
-
-\section{Mesh-free Operator Learning and geo-FNO}
-
-This section motivates operator learning on irregular domains and
-introduces geo-FNO as the architecture used for this purpose.
-
-\subsection{Motivation for irregular domains}
-
-Explain why many scientific and engineering problems do not naturally
-live on uniform Cartesian grids and why this matters for neural
-operators.
-
-\subsection{geo-FNO}
-
-Describe the geo-FNO approach and how it extends Fourier-based operator
-learning to non-uniform meshes.
-
-explain the architecture itself and that it is a generalization of FNO that collapses back to FNO when the input points are on a regular grid. Also mention that you can just interpolate the input data to a regular grid and use FNO, but this is not ideal because it can introduce interpolation errors and does not leverage the potential advantages of learning directly on the original point cloud. cite the geo fno paper that tested this and found lower loss when learning directly on the point cloud with geo-FNO compared to interpolating to a regular grid and using FNO.
-
-\section{Discretization invariance on mesh-free grids}
-
-More philosophical discussion of what discretization invariance means when we no longer have a regular grid and how this relates to the notion of a continuous-domain operator. 
-
-something like: 
-
-In this thesis, discretization invariance is interpreted as the ability of a model trained on data at one uniform resolution to make accurate predictions on the same underlying problem at different uniform resolutions. This notion does not transfer directly to non-uniform point clouds, where there is no single grid resolution. For non-uniform data, the relevant question is instead whether the sampled points sufficiently resolve the solution features needed for prediction.
-
-talk about this more in method/results chapter when we discuss loss as function of resolution.
-
-
-FINAL VERSION:
-
 \section{Operator Learning}
 
 Operator learning refers to the use of neural networks to approximate mappings between function spaces, rather than between finite-dimensional vectors as is done for classical neural network approaches \cite{neural-operators}. This setting arises naturally in scientific computing, where many problems can be formulated in terms of operators acting on functions.
@@ -192,7 +105,7 @@ This shows that frequencies above the Nyquist limit do not simply disappear. Ins
 The consequence is that information above the Nyquist limit is irreversibly lost. Once aliasing has occurred, the sampled data contains a distorted representation of the original function, where unresolved high-frequency behavior is interpreted as physically different low-frequency structure. No learning algorithm can reconstruct frequency content that is absent from the discretized data, regardless of model complexity or architecture \cite{bartolucci-discretization-invariance}.
 
 
-\subsection{Discretization Invariance}
+\subsection{Discretization Invariance}\label{sec:discretization-invariance}
 
 The discussion in Section \ref{sec:bandlimitedness} shows that learning from discretized data is fundamentally constrained by the information preserved under sampling. Even if a model is intended to approximate a continuous operator, it is trained and evaluated on finite representations of functions. This raises the question of whether the learned model depends only on the underlying function, or also on the particular discretization used to represent it.
 
@@ -216,56 +129,219 @@ Since training data is always discretized, a model is never directly exposed to 
 
 Discretization invariance is therefore a central criterion for evaluating neural operator architectures. In this thesis, it is used both as a theoretical concept and as an empirical measure for comparing models across changes in resolution.
 
-\section{Fourier neural operator}
+\section{Fourier neural operator -- FNO}\label{sec:fno}
 
-use the section already written but not currently accessible (mr gpt). to this section: add something about how global mixing/keeping global information is useful for many physical systems (cite source)
+The Fourier Neural Operator (FNO), introduced by Li et al. \cite{li2021fno}, was the first major neural operator architecture to demonstrate strong performance on large-scale PDE learning problems and remains one of the most influential models in operator learning. Its success established neural operators as a practical alternative to classical numerical solvers and motivated much of the subsequent development in the field \cite{fno-explained}, including architectures such as the Convolutional Neural Operator (CNO) and geo-FNO.
 
-\section{Convolutional neural operator}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/fno_figure.png}
+    \caption{\label{fig:fno_architecture} The architecture of the Fourier Neural Operator (FNO), showing the lifting layer, repeated Fourier layers consisting of spectral convolution and pointwise channel mixing, and the final projection layer. \cite{fno-figure}.}
+\end{figure}
 
-make it in the style/tone/length/structure of the FNO section. prompt:
+The central idea of the FNO is to learn the solution operator in Fourier space. The model performs global convolution by transforming the input field into its Fourier representation, applying learned transformations to the Fourier coefficients, and transforming the result back to the spatial domain.
 
-next is the convolutional neural operator. the CNO can be seen as an extension of the U-net neural network that have proven to be effective in fields like image processing (cite source). 
+Figure~\ref{fig:fno_architecture} illustrates the architecture of the FNO. The model approximates the solution operator
+\begin{equation}
+\mathcal{G} : a \mapsto u,
+\end{equation}
+where $a$ is the input function and $u$ is the corresponding solution field. The full network consists of three main components: an input lifting operator, a sequence of Fourier layers, and an output projection operator.
 
-insert figure of the CNO architecture \label{fig:cno-architecture}
+The lifting operator maps the input field into a higher-dimensional latent representation,
+\begin{equation}
+\mathcal{P}: a(x) \rightarrow v_0(x),
+\end{equation}
+where $v_0(x)$ contains a larger number of feature channels than the original physical field. This allows the subsequent Fourier layers to operate in a richer latent space rather than directly on the low-dimensional physical variables.
 
-we start by introducing the U-net. the U-net is a convolutional neural network, meaning it uses a kernel to apply convolutions. when interpreting this through the lense of physical systems, this corresponds to local mixing, which is beneficial for many physical systems exhibiting strong locality like X and Y (cite source). (maybe mention that this contrasts with the global bias of the FNO? this somewhat breaks the flow and does not feel like it fits in the CNO introduction section. I think maybe this is best saved for the discussion/comparison section) One limitation of convolutional neural networks when applied to physical systems is that the physical meaning of a certain kernel size depends on the resolution, as it will look at different spatial scales (include a figure here? explain in more detail?). CNOs borrow from U-nets and address this issue by using a multi-scale architecture, where the convolutional kernels are applied at multiple resolutions; see figure \ref{fig:cno-architecture}. The input is first fed through a lifting layer acting on the feature space (read thoughts at the end about the structure here). the input then passes through a convolutional block, consisting of a convolutional kernel application followed by a nonlinearity. as the representation descends on the encoder side (rephrase/explain this more), the spatial resolution is decreased using interpolation-based downsampling while the feature space "resolution" is increased. the input is again passed through a convolutional block, but as the kernel size is the same across all blocks, a different spatial scale is captured. on the decoder side, the coarse resolution is upsampled before another convolutional block is applied. to access higher frequency content that was lost to the downsampling, skip connections are in place so that the network can "see" what the input looked like on the same resolution on the encoder side. (maybe mention projection before final prediction is made, not sure if its necessary)
+The core of the architecture is the Fourier layer. Given an intermediate representation $v_l(x)$, each layer updates the features according to
+\begin{equation}
+v_{l+1}(x)
+=
+\sigma
+\left(
+Wv_l(x)
++
+\mathcal{K}(v_l)(x)
+\right),
+\end{equation}
+where $\mathcal{K}$ is the spectral convolution operator, $W$ is a pointwise linear transformation, and $\sigma$ is a nonlinear activation function.
 
-While the U-net structure succeeds at capturing multiple physical scales, it is not a discretization invariant architecture. The CNO makes several modifications to the U-net structure aimed at making the U-net discretization invariant/robust. First and most important is resampling onto a fixed internal grid/resolution. by doing this, the CNO always treats the same resolution (connect to bandlimitedness; we are implicitly assuming that the chosen resolution/the bandlimit it imposes captures sufficient detail to let the model learn the solution operator). when the resampling is downsampling, higher frequency content is explicitly truncated, which helps to stabilize the model. even if the CNO could access higher frequncy content at inference, if it has not seen it during training, it would not know what to do with it. explicitly removing the higher frequency content helps satabilize the model performance when testing on higher resolutions. at lower resolutions, upsampling should be equivalent to zero padding in fourier space (maybe unnecessary reference to fourier space) and should introduce minimal errors/discrepancies. regardless, interpolation errors are not unheard of. (decide whether to include an interpolation error section; could show the fourier power spectrum of navier stokes before and after resampling round trip, which shows that the real frequencies are retained, but higher frequency, unphysical/spurious content is generated by the round trip). the next modification of the CNO compared to the U-net is that the simple pointwise nonlinearity is superceded by a upsample-nonlinearity-downsample (UND) block. this change is made as the pointwise nonlinearity alone is not discretization invariant. The application of the nonlinearity creates higher frequency content. consider ... (mathematical proof of this fact). when the generated frequencies have frequencies above nyquist for a given resolution, they will fold down and contaminate the resolvable modes. As outlined in section \ref{sec:bandlimitedness}, the aliasing pattern is deterministic and dependent on the resolution, which violates discretization invariance (this doesn't make any sense. for the CNO, the UND block is applied only after the resampling, so the aliasing pattern is always the same. why exactly does the UND block lead to a more discretization invariant model? why is it included, what is it intended to do, and why does it help?). to solve this, the CNO uses the aforementioned UND block. before the nonlinearity is applied, the data/input is first upsampled to a higher resolution, which is equivalent to zero padding in fourier space. when the nonlinearity is then applied, the higher frequency content has space to exist without folding into lower frequencies. after the nonlinearity is applied, the data is downsampled back to the original resolution using a X filter (I do not remember the name, but it is not a true low pass filter. it is an approximation. this is important to cover in some depth, as this is why the CNO without the UND block outperforms the standard CNO at high resolutions of navier stokes, so i need to be able to refer back to it here when i cover it in discussion), which is equivalent to truncating the higher frequency content. by doing this, the CNO can safely apply nonlinearities without generating spurious low-frequency content that would violate discretization invariance. There are some other minor tweaks, but they are not theoretically important. just make sure to not make it sound like resampling onto a fixed internal grid + UND are the only changes, they are just the main ones
+The spectral convolution operator is implemented by first applying a Fourier transform to the input features,
+followed by truncation to a fixed number of low-frequency Fourier modes. Learned complex-valued weights are then applied directly to these retained coefficients in frequency space. Finally, an inverse Fourier transform maps the result back to the spatial domain,
+\begin{equation}
+\mathcal{K}(v_l)
+=
+\mathcal{F}^{-1}
+\left(
+R \cdot \mathcal{F}(v_l)
+\right),
+\end{equation}
+where $R$ denotes the learned complex weights acting on the retained modes.
 
-for strengths, the CNO is a robust model. the initial resampling ensures stable performance across resolutions,given that the training resolution is sufficient to capture the relevant features of the problem. convolutions are useful for many physical problems that exhibit strong local bias like X and Y (cite source) (I see now that this is very similar to something i wrote earlier in the CNO section. I think it makes sense to mention at depth here; remove or shorten it where i wrote it before). the multi-scale architecture allows it to capture a wide range of physical scales, which is important for many physical problems. it is especially useful for problems like Navier stokes that see energy transfer across length scales (cite source). the UND block also ensures that it is a true neural operator, as it can apply nonlinearities without generating spurious low-frequency content that would violate discretization invariance \cite{bartolucci-discretization-invariance}. others?
+This frequency-space formulation is what distinguishes the FNO from standard convolutional architectures. Instead of learning kernels tied to a fixed spatial stencil, the model learns transformations of Fourier modes, which correspond to global basis functions spanning the entire domain.
 
-for weaknesses, the CNO is quite computationally expensive due to the use of convolutional layers and the multi-scale architecture. the changes made compared to a U-net also add to the computational cost. it also has more hyperparameters to tune, which can make training more difficult (is this true?). the resampling step can introduce interpolation errors, which can degrade performance if not done carefully. Others?
+Alongside the spectral path, the term $Wv_l(x)$ provides a local pointwise linear transformation in physical space. This is a channel-mixing operator analogous to a $1 \times 1$ convolution. It allows the model to preserve and update local information that may not be captured effectively by the truncated spectral representation alone.
 
-one problem i see with this structure is that i explain a U-net in some depth, but i do not make it clear whether this is about the u-net or the CNO. i later explain in which way the CNO builds on and "improves" the U-net, and only then do i explain that the CNO first resamples the input onto a fixed internal grid. this was not mentioned in my explanation of the u-net structure, which could confuse the reader. the only reason i dont make it crystal clear that I am talking about u-nets when i first explain this is that i am referring to a figure that shows the CNO structure. it is close enough to the U-net that keeping both seems unnecessary. 
+After several Fourier layers, the projection operator maps the final latent representation back to the physical output space,
+\begin{equation}
+\mathcal{D}: v_L(x) \rightarrow u(x),
+\end{equation}
+producing the predicted solution field.
+
+\subsection{Strengths}
+
+One of the main strengths of the FNO is its ability to capture global dependencies efficiently. Since Fourier modes are global basis functions, modifying a single coefficient influences the solution across the entire domain. This gives the model a global receptive field in every layer, making it particularly well suited for PDEs whose solution operators exhibit long-range interactions.
+
+A second major advantage is computational efficiency. Directly learning an integral operator in physical space would require pairwise interactions between all spatial locations, leading to quadratic complexity in the number of grid points. By performing convolution through the Fast Fourier Transform (FFT), the FNO reduces this cost to
+\begin{equation}
+\mathcal{O}(n \log n),
+\end{equation}
+which makes large-scale operator learning computationally feasible.
+
+The use of Fourier coefficients also provides a degree of resolution transfer across uniform Cartesian grids. Since the learned parameters act on modes rather than individual grid points, the same operator can be applied to different uniform resolutions without retraining, provided the relevant frequency content is sufficiently resolved. This makes the FNO significantly more flexible than standard convolutional networks, which are often strongly tied to the discretization used during training.
+
+\subsection{Weaknesses}
+
+The primary limitation of the FNO is its reliance on spectral truncation. In each Fourier layer, only a fixed number of low-frequency modes are retained, while the remaining higher-frequency coefficients are discarded. This introduces an explicit architectural bandlimit determined by the number of retained modes.
+
+This should be distinguished from the sampling bandlimit discussed in Section~\ref{sec:bandlimitedness}. There, the Nyquist limit was imposed by the resolution of the data itself; frequencies above that limit could not be represented in the discretized input. In the FNO, an additional bandlimit is imposed by the model architecture, even if higher-frequency information is present in the data. The network therefore discards information that may in principle be available.
+
+As discussed in the context of aliasing, unresolved high-frequency modes do not simply vanish. Instead, they may be systematically folded into lower frequencies, leading to a distorted representation of the underlying function. This issue becomes particularly severe when the target operator depends strongly on localized or high-frequency features, such as sharp gradients, discontinuities, or fine-scale geometric effects. In such cases, the low-mode bias of the FNO can lead to poor generalization across resolutions and unstable behavior under discretization changes.
+
+A second important limitation is the reliance on uniform Cartesian grids. The standard FFT assumes regularly spaced points with consistent ordering, which makes the original FNO naturally suited for structured meshes but difficult to apply directly to irregular geometries or unstructured point clouds.
+
+Finally, although the FNO is often described as discretization invariant, this property only holds approximately and within the setting of uniform grids. Changes in resolution can still lead to discretization mismatch, particularly when the effective frequency content of the problem changes across discretizations. This limitation motivates both the development of the CNO, which addresses representation consistency more explicitly, and geo-FNO, which extends Fourier-based operator learning to irregular domains.
+
+
+\section{Convolutional Neural Operator -- CNO} \label{sec:cno}
+
+\subsection{Architecture}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/cno_figure.png}
+    \caption{\label{fig:cno-architecture} The architecture of the Convolutional Neural Operator (CNO) \cite{cno}, showing the lifting operator $P$, projection operator $Q$, and the central U-shaped neural operator structure. The network combines downsampling ($D$-blocks), upsampling ($U$-blocks), residual blocks ($R$-blocks), and invariant blocks ($I$-blocks) across multiple spatial scales, with skip connections and concatenation used to preserve multiscale information. Anti-aliased downsampling and upsampling ensure resolution-invariant feature propagation across discretizations.}
+\end{figure}
+
+The Convolutional Neural Operator (CNO), introduced by Raonic et al. \cite{raonic_convolutional_2023}, extends the classical U-Net architecture to the operator learning setting. U-Nets and related convolutional neural networks have been highly successful in fields such as image processing and segmentation due to their ability to efficiently capture local spatial structure through convolutional kernels \cite{U-net}. The CNO adopts this encoder--decoder structure while introducing several modifications aimed at satisfying the discretization invariance requirements discussed in Section~\ref{sec:discretization-invariance}.
+
+Unlike the Fourier Neural Operator, which learns global interactions through Fourier modes, the CNO is built on standard convolutions in physical space. A convolutional kernel acts on a local neighborhood of points, producing a local operator rather than a global spectral one. This makes the model structurally similar to standard convolutional neural networks, but introduces an important challenge for operator learning: the physical meaning of a fixed kernel depends on the discretization.
+
+For example, a $3 \times 3$ kernel applied on a coarse grid covers a much larger physical region than the same kernel on a fine grid. As a result, a standard CNN or U-Net is not naturally discretization invariant, since changing the resolution changes the effective operator being learned.
+
+To address this, the CNO uses a multi-scale encoder--decoder architecture together with an initial resampling step onto a fixed internal resolution. Figure~\ref{fig:cno-architecture} illustrates the overall structure. The input is first passed through a lifting layer, which maps the physical input field into a higher-dimensional feature space. This serves the same purpose as in the FNO, allowing the operator to be learned in a richer latent representation.
+
+The lifted representation then enters the encoder, where it passes through a sequence of convolutional blocks. Each block consists of a convolution followed by a nonlinear activation. As the representation moves deeper into the encoder, the spatial resolution is progressively reduced through interpolation-based downsampling, while the number of feature channels is increased. Although the kernel size remains fixed, applying it at multiple resolutions allows the network to process information across different spatial scales.
+
+At the coarsest level, the decoder progressively reconstructs the solution by upsampling the representation back to higher resolutions. After each upsampling step, another convolutional block is applied. Skip connections link encoder and decoder stages at matching resolutions, allowing fine-scale information from earlier layers to be reintroduced during reconstruction.
+
+A key modification compared to a standard U-Net is the use of resampling onto a fixed internal grid before the main operator learning begins. Regardless of the input resolution, the model first interpolates the input onto the same internal discretization. This ensures that the convolutional kernels always act over the same physical scale inside the network.
+
+This design also connects directly to the bandlimitedness discussion in Section~\ref{sec:bandlimitedness}. By choosing a fixed internal resolution, the CNO imposes an explicit bandlimit on the learned representation. Frequencies beyond this scale are removed during resampling, so the model always operates on a controlled frequency range.
+
+A second major modification is the replacement of standard pointwise nonlinearities with the upsample--nonlinearity--downsample (UND) block. A standard pointwise activation applied directly on a finite grid is not representation-equivalent: even if the input is bandlimited, the nonlinearity generates new higher-frequency components that may lie above the Nyquist limit. These unresolved frequencies alias into lower modes, making the discrete nonlinear operator inconsistent with the corresponding continuous operator and violating the continuum consistency discussed in Section~\ref{sec:discretization-invariance}.
+
+To address this, the CNO first upsamples the representation before applying the nonlinearity, creating spectral room for the newly generated frequencies to exist without immediately aliasing into the resolved modes. After the activation is applied, the representation is downsampled back to the original resolution using a low-pass filtering operation that removes the unresolved high-frequency content. Ideally, this filtering would be performed using the sinc interpolation filter implied by the Whittaker--Shannon sampling theorem, which provides exact reconstruction for bandlimited functions \cite{signals-and-systems}. In practice, this is approximated by a finite-support low-pass blur filter for computational efficiency, since exact sinc filtering is non-local and expensive to evaluate.
+
+After the decoder stage, a projection layer maps the final latent representation back to the physical output space, producing the predicted solution field. Together, the fixed-grid resampling and the UND block are the central modifications that distinguish the CNO from a standard U-Net and make it suitable for operator learning across multiple discretizations.
+
+\subsection{Strengths}
+
+A major strength of the CNO is its strong local inductive bias. Since the model is built on standard convolutions in physical space, it naturally captures local interactions where the state at a point depends primarily on its immediate neighborhood. This is particularly well suited for many physical systems such as advection, diffusion, heat transfer, and turbulence-dominated flows, where local spatial structure plays a dominant role.
+
+The encoder--decoder structure further allows the model to capture interactions across multiple physical scales. Coarse-resolution layers represent large-scale structures and long-range behavior, while fine-resolution layers preserve localized detail through skip connections. This is especially important for multiscale systems such as Navier--Stokes flow, where energy is transferred across a wide range of length scales and both global and local behavior must be represented simultaneously.
+
+Another important advantage is robustness across resolutions. Because all inputs are first resampled onto the same internal grid, the model avoids much of the discretization dependence seen in standard convolutional architectures. Provided that the chosen internal resolution is sufficient to resolve the relevant physics, this often leads to more stable generalization across discretizations than methods that rely directly on the input resolution.
+
+The explicit treatment of bandlimiting also provides an important advantage compared to architectures where truncation occurs only implicitly. By controlling both resampling and nonlinear aliasing through the fixed internal grid and the UND block, the CNO avoids many of the spectral artifacts associated with unresolved high-frequency content. This improves continuum consistency and makes the model much closer to satisfying the definition of a true neural operator discussed in Section~\ref{sec:discretization-invariance} and in \cite{bartolucci-discretization-invariance}.
+
+\subsection{Weaknesses}
+
+The primary weakness of the CNO is its computational cost. Compared to the FNO, which leverages the Fast Fourier Transform to achieve $\mathcal{O}(n \log n)$ complexity, the CNO relies on repeated convolutional operations across multiple resolutions. The encoder--decoder structure, skip connections, repeated interpolation steps, and UND blocks all increase both training time and memory usage, making the model significantly more expensive to train and evaluate.
+
+A second limitation is the dependence on the chosen internal resolution. The resampling step improves consistency by enforcing a fixed internal representation, but it also introduces a strong modeling assumption: namely, that this chosen resolution is sufficient to capture all physically relevant features of the problem. If the internal grid is too coarse, important high-frequency information may be removed before learning even begins. In this case, the model becomes stable but systematically under-resolved.
+
+This explicit truncation of high-frequency information is therefore both a strength and a weakness. While it improves robustness and discretization consistency, it can reduce accuracy for problems where sharp gradients, discontinuities, or fine-scale geometric details play a dominant role. In such cases, the CNO may sacrifice important local information in exchange for stability.
+
+Another practical limitation is the reliance on interpolation during resampling. Both the initial projection onto the fixed internal grid and the repeated upsampling and downsampling operations in the UND blocks introduce approximation errors. Ideally, these operations would be performed using exact sinc interpolation for bandlimited functions, but in practice finite-support approximations are used for computational efficiency, which can introduce errors.
+
+Finally, while the CNO improves discretization invariance substantially compared to standard U-Nets and often compared to the FNO, it is still not fully resolution-independent in practice. Its behavior remains tied to the chosen internal discretization, meaning that discretization robustness depends strongly on how well this internal representation matches the true frequency content of the underlying problem.
 
 
 \section{Mesh-free Operator Learning and geo-FNO}
 
-short intro section? or straight to irregular domains?
+\subsection{Motivation for Irregular Domains}
 
-\subsection{Motivation for irregular domains}
+The neural operators introduced in Sections~\ref{sec:fno} and~\ref{sec:cno} assume that the input and output fields are represented on uniform Cartesian grids. While this assumption is convenient for both Fourier-based and convolutional architectures, it is often restrictive for scientific and engineering problems where the natural discretization of the domain is non-uniform.
 
-While successful, the operators introduced in section \ref{fno-section} and \ref{cno-section} run into the issue of requiring the input data to be structured on a uniform, rectangular, Cartesian grid. This is often a very inefficient way of storing the data. a dataset with high variance in one area and low variance in another can much more effectively capture the dataset with varying sampling rates (cite source). other datasets may simply be on a geometry that does not lend itself to a Cartesian representation (cite source). While one could always interpolate a dataset of an arbitrary structure onto a Cartesian grid and feed that to uniform grid neural operators, this has been shown to incur signicant interpolation errors, hampering the performance of these models significantly (cite source; i think there was a good one in the introduction of the geo fno paper). This motivates extending neural operators to non-uniform meshes/point clouds. other things to bring up here?
+A uniform grid can be an inefficient representation when the solution exhibits strong spatial variation only in localized regions. For example, a flow field containing sharp boundary layers or localized vortices may require very high resolution in a small part of the domain, while the remaining regions vary smoothly and can be represented accurately with far fewer points. Using a uniform Cartesian grid forces the entire domain to be sampled at the highest required resolution, leading to unnecessary computational cost and memory usage.
 
-\subsection{geo-FNO}
+In many applications, the geometry itself also does not naturally conform to a rectangular grid. Examples include fluid flow around airfoils, structural mechanics on curved surfaces, porous media with irregular boundaries, and many reactor physics problems involving complex geometries \cite{irregular-data}. In such settings, the natural discretization is often given by an unstructured mesh or a point cloud rather than a regular lattice.
 
-The geo-FNO is one of the most significant non-uniform neural operators. The architecture directly builds upon the original FNO, effectively being a generalization of it (cite source). The geo-fno, short for geometry-aware FNO, consists of a coordinate transform in the form of a light MLP in front of an FNO as described in section \ref{fno-section}. the coordinate transform, referred to as IPHI (use inverse of greek letter phi), is trained jointly with the FNO and thus learns a transform that minimized the loss. the grid following the transformation is referred to as the computational grid. this non uniform grid is the first input to the FNO, with the FFT replaced with a non uniform DFT. after the first Fourier layer, when the inverse fourier transform is taken, we return to physical space on a uniform grid, which is used throughout the FNO until the final output. this compromise delivers better performance than the interpolation onto a uniform grid outlined in section \ref{motivation for irregular domains}, while maintaining the efficiency of fast fourier transforms within the FNO. 
+A common workaround is to interpolate the data from the original mesh onto a uniform Cartesian grid and then apply a standard neural operator such as the FNO or CNO. However, this interpolation step introduces additional approximation error and may discard important geometric information contained in the original discretization. In particular, regions requiring high local resolution may be smoothed or under-resolved when forced onto a regular grid, reducing both accuracy and efficiency.
 
-The geo-FNO has the advantage that it can be evaluated at arbritrary positions. This is because the final FNO layer has a stage where it has the fourier coefficients of its solution prediction, which is defined everywhere in physical space. The geo-FNO allows for a list of points to be passed, and prediction can be made on said points despite these points not being seen during training. The geo-FNO therefore satisfies two of the points outlined in section \ref{discretization invariance}, as it can take input and output at arbitrary positions.
+These limitations motivate the development of mesh-free neural operators, which aim to learn directly from irregular point clouds or unstructured meshes without requiring interpolation onto a Cartesian grid. Such models seek to preserve the geometric information present in the original discretization while retaining the advantages of operator learning.
 
-iphi is a coordinate transform that takes the form: iphi(x, a) = x + f(x, a) where x is the set of input points and a is an optional vector of geometry parameters. f(x,a) is initialized as identity, stabilizing training. iphi is trained jointly with the FNO, meaning that the coordinate transform learns to minimize the loss while adapting to the geometry of the input data. This could mean mapping to a distribution where energy is shifted away from the higher modes that the FNO cannot resolve and into lower modes that are utilized. note that iphi does not map onto a discrete grid; this is a continuous to continuous mapping. the discrete fourier transform has its problems, as the resulting Fourier basis is in general not orthogonal (include proof of this; show why the basis is orthogonal for a uniform grid, and explain which step does not hold for non uniform grids). this could cause issues because ... (i am actually not sure what the consequences could be; help me with this). the vector a lets the model access information about geometric parameters that could differ between samples. an example of these is the aerospace airfoil thingy i need to find a source for, where something like 20-30 different parameters together span a continuous space. by feeding iphi these parameters, the mapping can be tailored to the exact geometric setup, letting the geo-FNO make a wider range of predictions more efficiently. (somewhere in the iphi section: include a couple of lines + source showing that such a coordinate transform can be effective. ex. chebyshev basis from original geo fno paper)
+\subsection{Geometry-aware Fourier Neural Operator -- geo-FNO}
 
-are there other things to mention about the geo-FNO? it is really just a coordinate transform wrapper around an FNO already described in the FNO section. the FNO itself is unchanged except for the initial fourier transform and final inverse transform being replaced by non-uniform approximations. let me know if i am missing something or if this is enough
+\subsubsection{Architecture}
 
-\section{Discretization invariance on mesh-free grids}
+The geometry-aware Fourier Neural Operator (geo-FNO), introduced by Li et al. \cite{geo-fno}, extends the original FNO to problems defined on irregular domains such as point clouds and unstructured meshes. While the standard FNO assumes that the input field is represented on a uniform Cartesian grid, geo-FNO is designed to work directly with non-uniformly sampled input data.
 
-More philosophical discussion of what discretization invariance means when we no longer have a regular grid and how this relates to the notion of a continuous-domain operator. 
+Conceptually, geo-FNO can be viewed as a generalization of the original FNO. The core Fourier Neural Operator remains unchanged: the model performs spectral convolution by transforming the input into Fourier space, applying learned complex weights to the retained modes, and transforming back to the spatial domain. The main modification is the introduction of a learned coordinate transformation placed before the FNO, together with non-uniform Fourier transforms at the input and output stages.
 
-In this thesis, discretization invariance is interpreted as the ability of a model trained on data at one uniform resolution to make accurate predictions on the same underlying problem at different uniform resolutions. This notion does not transfer directly to non-uniform point clouds, where there is no single grid resolution. For non-uniform data, the relevant question is instead whether the sampled points sufficiently resolve the solution features needed for prediction. This is more a question of where those points are instead of simply how many there are.
+It is useful to distinguish between three different coordinate systems used in the model. The first is the input grid, corresponding to the original irregular point cloud where the data is given. The second is the computational grid, obtained after applying the learned coordinate transformation $\phi^{-1}$. This grid is still non-uniform, but is mapped into a representation that is more suitable for Fourier learning. The third is the internal grid, which is the uniform Cartesian grid used inside the FNO after the first spectral layer.
 
-help me with this section. what i really want to say is that discretization invariance is an easy concept for uniform grids, as an increase in resolution is well defined. on non uniform grids/point clouds, this is more complicated. the sheer number of points is not nearly as important as their distribution. i want to explain that because of this increase in complexity, no resolution experiments were conducted for non uniform grids. i want to have more of an explanation than that, however, and explain how my results and the fact that the models produces proper predictions is indicative of ... the section above i think is a good starting point
+The learned coordinate transformation is denoted by $\phi^{-1}$, implemented in the original work as the network IPHI. Given input coordinates $x$, and optionally a vector of geometry parameters $a$, the mapping is defined as
+\begin{equation}
+\phi^{-1}(x, a) = x + f(x, a),
+\end{equation}
+where $f(x, a)$ is represented by a lightweight multilayer perceptron and initialized close to zero so that the mapping begins near the identity transformation. The coordinate transform is trained jointly with the FNO and learns a mapping that minimizes the prediction error while adapting to the geometry of the problem.
 
-talk about this more in method/results chapter when we discuss loss as function of resolution.
+Importantly, this is a continuous-to-continuous mapping rather than interpolation onto a discrete grid. The transformed points remain irregularly distributed, and the purpose of the mapping is not to force the domain onto a regular mesh, but to provide a coordinate system in which Fourier-based operator learning becomes more effective.
+
+After this transformation, the input field is processed using a non-uniform discrete Fourier transform rather than the standard FFT used in the original FNO. This is necessary because the computational grid is still non-uniform. After the first spectral layer, when the inverse transform is applied, the representation is reconstructed on the uniform internal grid. The remaining Fourier layers then operate exactly as in the standard FNO using efficient FFT-based convolutions.
+
+At the output stage, the model allows predictions to be made at arbitrary spatial locations rather than only on a fixed output mesh. During inference, a set of query points is provided corresponding to the locations where the solution is desired. These points are passed through the same learned coordinate transformation $\phi^{-1}$, mapping them into the computational coordinate system.
+
+The final layer of the FNO produces a spectral representation of the solution in terms of Fourier coefficients on the internal grid. Instead of reconstructing the solution only on that grid, the inverse transform can be evaluated directly at the transformed query points. In this way, the model can predict the solution at locations that were not explicitly present during training, including new sensor positions, boundary points, or entirely different point clouds.
+
+This means that geo-FNO satisfies two of the three neural operator conditions discussed in Section~\ref{sec:discretization-invariance}: it can accept inputs defined on irregular point sets and can be evaluated at arbitrary output positions.
+
+\subsubsection{Strengths}
+
+The primary strength of geo-FNO is that it extends Fourier-based operator learning to irregular domains without requiring the full problem to be pre-interpolated onto a Cartesian grid before learning begins. This allows the model to work directly on point clouds and unstructured meshes while preserving geometric information that may be lost during interpolation to a regular lattice.
+
+Because the internal operator remains an FNO, geo-FNO retains many of the advantages of spectral operator learning. It still benefits from global receptive fields, efficient FFT-based convolutions in the internal layers, and strong performance on operators dominated by large-scale smooth structure. Compared to fully mesh-based or graph-based approaches, this often provides significantly better computational efficiency.
+
+The learned coordinate transform provides an important representational advantage. Rather than relying on a fixed hand-designed mapping, the model learns a problem-dependent coordinate system jointly with the operator itself. This allows the geometry to be adapted so that the retained low Fourier modes capture more of the physically relevant information, improving approximation quality without requiring a large increase in retained modes.
+
+Another important strength is output flexibility. Since predictions are reconstructed from Fourier coefficients rather than tied to a fixed output mesh, the model can be evaluated at arbitrary query locations. This is particularly useful for scientific computing problems where predictions may be required on new sensor locations, boundary points, or adaptive meshes not seen during training.
+
+
+\subsubsection{Weaknesses}
+
+The main limitation of geo-FNO is that it inherits many of the weaknesses of the original FNO. Spectral truncation remains central to the architecture, meaning that high-frequency information is still discarded and the model retains a strong low-frequency bias. For problems dominated by sharp gradients, discontinuities, or highly localized effects, this can still lead to poor approximation quality.
+
+A second challenge arises from the use of non-uniform Fourier transforms. On a uniform Cartesian grid, the Fourier basis is orthogonal under the discrete inner product, meaning that each Fourier coefficient corresponds cleanly to a single frequency mode. Truncating high modes therefore has a clear interpretation: specific frequencies are removed from the representation.
+
+On an irregular point cloud, this orthogonality is lost \cite{nonuniform-fft}. The Fourier basis functions are no longer orthogonal under sampling, and the resulting coefficients become mixtures of multiple true modes rather than clean representations of individual frequencies. As a result, truncating a single Fourier coefficient no longer corresponds to removing one specific mode, but instead removes part of several mixed components. Likewise, applying learned weights to a given coefficient affects a mixture of spectral information rather than a single interpretable frequency. This makes spectral truncation significantly less stable and reduces both computational efficiency and spectral interpretability compared to the standard FNO. 
+
+A further limitation is that the success of geo-FNO depends heavily on the learned coordinate transform. If the mapping learned by $\phi^{-1}$ fails to produce a representation where the retained low Fourier modes are sufficiently informative, the model may still suffer from poor truncation behavior. Since this mapping is learned jointly with the FNO, training can become sensitive to initialization and optimization choices.
+
+Although geo-FNO avoids explicit pre-interpolation onto a Cartesian grid, it does not completely remove representation dependence. The quality of the learned operator still depends strongly on the spatial distribution of the input points. Poor geometric coverage, highly clustered sampling, or insufficient resolution near important local features may all produce unstable spectral representations, even after coordinate transformation. As a result, model performance depends not only on how many points are available, but critically on where those points are located relative to the underlying physics.
+
+\section{Discretization Invariance on Mesh-Free Grids}
+
+So far, discretization invariance has primarily been discussed in the context of functions represented on uniform Cartesian grids. In that setting, the concept is relatively straightforward: increasing the resolution corresponds to decreasing the grid spacing while preserving the same underlying domain. A model can therefore be tested by training on one resolution and evaluating on another, allowing discretization invariance to be interpreted as robustness to resolution transfer.
+
+For non-uniform meshes and point clouds, this notion does not transfer directly. There is no single grid spacing and therefore no unique definition of resolution. Increasing the number of points alone does not necessarily improve the representation of the underlying function; what matters is where those points are placed relative to the important features of the solution. A point cloud with dense sampling near sharp gradients or boundaries may resolve the problem better than a uniformly distributed cloud with many more total points.
+
+As a result, discretization invariance in the mesh-free setting is better interpreted as robustness to changes in sampling geometry rather than transfer across resolutions. The relevant question is not whether a model trained at one resolution generalizes to another, but whether it produces consistent and accurate predictions across different point distributions representing the same underlying problem.
+
+For this reason, no direct resolution-transfer experiments were conducted for the mesh-free datasets considered in this thesis. Unlike the structured-grid setting used for the FNO and CNO, there is no well-posed notion of systematically increasing or decreasing resolution while preserving a comparable discretization. Varying only the number of points would not provide a meaningful measure of discretization invariance without also controlling for point placement.
+
+Instead, the evaluation of geo-FNO focuses on whether the model can produce physically meaningful predictions directly on irregular point clouds and whether learning on the original mesh improves performance compared to interpolation onto a uniform grid. Successful prediction in this setting indicates that the model is able to learn a stable approximation of the underlying operator despite the absence of a fixed uniform discretization.
 
 
 

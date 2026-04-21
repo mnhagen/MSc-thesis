@@ -178,12 +178,55 @@ was therefore used for the HTGR results reported in the main text.
 
 This appendix provides a complete list of the hyperparameters used for each model and dataset in the experiments described in Chapter~\ref{cha:method}. The hyperparameters include architectural choices, training settings, and any dataset-specific parameters that were relevant for model performance. The listed hyperpameters were determined through a combination of prior literature, preliminary experiments, and manual tuning to achieve good performance.
 
-\chapter{Geo-FNO bug fix}\label{geo-fno-seam}
 
-insert figure of same sample from cylinder flow a) without iphi b) with iphi c) after fix, with iphi
+\chapter{Geo-FNO Bug Fix}
+\label{cha:geo-fno-bug-fix}
 
-insert figure of iphi on cylinder dataset before and after bug fix
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/navier_spectral.png}
+    \caption{\label{fig:cylinder-flow-seam} Representative Geo-FNO prediction on the cylinder flow dataset before and after the bug fix. From left to right, this plot shows the ground truth, the original prediction with the seam artifact, the unpatched model trained without the learned coordinate mapping $\phi^{-1}$, and the corrected prediction after fixing the Fourier mode reconstruction.}
+\end{figure}
 
-During testing of the Geo-FNO, a central, vertical, seam-like artifact appeared across all tested datasets. An example of this is shown in figure \ref{cylinder flow example before and after} Inspecting the coordinate mapping iphi learned revealed that it split the domain down the middle, as seen in figure \ref(iphi before and after). Training a model without iphi lead to worse performance, meaning the split observed in iphi is to minimize the number of points sampled in the area where the seam appeared and decreased performance. Importantly, iphi itself was not the source of the seam.  (how much of my troubleshooting should i talk about? probably very little. i have several plots i used to narrow down what was causing the issue, but i do not think that is relevant. i will just state what the bug was, why that was wrong, how it was fixed and the performance increase we saw as a result.)
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/navier_spectral.png}
+    \caption{\label{fig:iphi-before-after} Learned coordinate mapping $\phi^{-1}$ before and after the bug fix. The left panel shows the mapping learned by the original implementation, which exhibits a vertical split of the domain. The right panel shows the mapping learned after correcting the Fourier mode reconstruction, which no longer exhibits this artificial split.}
+\end{figure}
 
-the bug was found to be caused by a mismatch in the reconstruction of discarded modes. the geo-FNO keeps N modes in each direction, corresponding to N positive and N negative modes in each direction. (include a figure of the modes in 2d for clarity? not necessary for explanation but might help reader understand) However, the real valued field constraint/Hermitian symmetry can be used to reduce the number of modes kept. it is given as U(-kx, -ky) = conj(U(kx, ky)). as such, the negative ky modes are explicitly discarded to save memory, as any mode with negative ky can be reconstructed using \ref{hermitian-symmetry-eq}. separate learned complex weights are applied to (+kx, +ky) and (-kx, +ky) respectively. when reconstructing the physical field, the real valued constraint is used to reconstruct the discarded ky modes. the seam was caused by a bug in how these modes were matched up. the exact line where this reconstruction was done was this: (insert exact line from original geo fno repo before my pull). to match the modes correctly in the code, the lists of kx and ky modes are flipped. For the ky modes, the flip is straightforward and works as intended. the kx modes, however, are stored as [0, 1, ..., N-1, -N, -(N-1), ..., -1]. the 0th mode is self conjugate, as is the -N mode referred to as the Nyquist edge mode. a simple flip as is applied in this line of code gives [-1, -2, ..., -N, N-1, N-2, ..., 0]. this leads to an incorrect matching that can be expressed as: U(kx, ky) = conj(U(-(kx + 1), -ky)) for kx > 0. This mismatch is the greatest for kx = 0 and the other low kx modes, leading to corruption that causes the vertical seam. fixing this line of code such that the modes are correctly matched lead to a decrease in MSE loss for the cylinder flow dataset from 5.5e-3 to 4.7e-3, or a 15\% decrease. Visually, this fix removed the seam entirely, as can be seen in figure \ref{cylinder flow example before and after} The authors of the geo-FNO paper were notified of these findings, and my proposed fix has been implemented in the official repository. 
+During testing of the Geo-FNO, a persistent vertical seam-like artifact appeared across all tested datasets. The artifact was particularly visible in the cylinder flow dataset, where predictions showed a clear discontinuity along the center of the domain. An example is shown in Figure~\ref{fig:cylinder-flow-seam}, where the predicted solution exhibits a sharp artificial transition that is not present in the ground truth.
+
+Inspection of the learned coordinate transformation $\phi^{-1}$ revealed that it consistently split the domain along the same vertical line, as illustrated in Figure~\ref{fig:iphi-before-after}. At first glance, this suggested that the learned coordinate mapping itself might be responsible for the artifact. However, training the model without $\phi^{-1}$ caused the seam to become substantially more pronounced, while the prediction quality away from the seam remained largely unchanged and the overall loss increased only modestly. This indicates that the learned behavior of $\phi^{-1}$ was not the source of the artifact, but rather an adaptation to it. By reducing the density of sampled points near the corrupted region, the mapping partially mitigated the visible effect of the reconstruction error without removing its underlying cause.
+
+The source of the artifact was found to be an error in the reconstruction of discarded Fourier modes during the inverse transform. As in the standard FNO, geo-FNO retains only a finite number of Fourier modes in each direction. For a real-valued field, the Fourier coefficients satisfy the Hermitian symmetry condition
+\begin{equation}
+U(-k_x, -k_y) = \overline{U(k_x, k_y)},
+\label{eq:hermitian-symmetry}
+\end{equation}
+where the overline denotes complex conjugation. This symmetry implies that only half of the Fourier spectrum needs to be stored explicitly, since the remaining coefficients can be reconstructed from their conjugate counterparts. In principle, any conjugate half of the spectrum could be discarded; in the Geo-FNO implementation, the modes with negative $k_y$ are omitted for memory efficiency and reconstructed during the inverse transform using Equation~\ref{eq:hermitian-symmetry}.
+
+The implementation keeps only the modes with positive $k_y$, while separate learned complex weights are applied to the $(+k_x,+k_y)$ and $(-k_x,+k_y)$ branches. During reconstruction of the physical field, the discarded negative $k_y$ modes are recovered using Equation~\ref{eq:hermitian-symmetry}. The seam artifact was caused by an indexing error in this reconstruction step.
+
+The original implementation reconstructed the discarded modes using a simple reversal of the stored mode ordering. For the $k_y$ direction, this is correct. However, for the $k_x$ direction, the Fourier modes are stored in the order
+\begin{equation}
+[0, 1, \dots, N-1, -N, -(N-1), \dots, -1].
+\end{equation}
+
+Two modes in this ordering are self-conjugate: the zero mode $k_x = 0$ and the Nyquist edge mode $k_x = -N$. Applying a direct reversal produces
+\begin{equation}
+[-1, -2, \dots, -N, N-1, N-2, \dots, 0],
+\end{equation}
+which incorrectly pairs the modes during reconstruction.
+
+As a result, the implemented reconstruction effectively enforced
+\begin{equation}
+U(k_x, k_y)
+=
+\overline{U\bigl(-(k_x + 1), -k_y\bigr)},
+\qquad k_x > 0,
+\end{equation}
+instead of the correct Hermitian symmetry relation in Equation~\ref{eq:hermitian-symmetry}. This mismatch was strongest for the lowest $k_x$ modes adjacent to the self-conjugate modes, causing corruption of the low-frequency components of the reconstructed field. Since these low modes dominate the global structure of the solution, the error appeared visually as a strong vertical seam through the center of the domain.
+
+Correcting the reconstruction so that the discarded modes were matched to their proper conjugate partners removed the artifact entirely. For the cylinder flow dataset, this reduced the mean squared error from approximately $5.5 \times 10^{-3}$ to $4.7 \times 10^{-3}$, corresponding to a reduction of approximately 15\%. The visual seam disappeared completely, as shown in Figure~\ref{fig:cylinder-flow-seam}, while the learned $\phi^{-1}$ mapping no longer exhibited the artificial domain split shown in Figure~\ref{fig:iphi-before-after}.
+
+The issue was reported to the authors of the original Geo-FNO implementation, and the proposed correction was subsequently incorporated into the official repository.
