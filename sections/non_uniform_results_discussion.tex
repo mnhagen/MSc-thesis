@@ -1,4 +1,4 @@
-\chapter{\label{non-uniform-results-discussion} Non-uniform meshes - Results and Discussion}
+\chapter{\label{cha:non-uniform-results-discussion} Non-uniform meshes - Results and Discussion}
 
 \section{Results}
 
@@ -43,7 +43,7 @@ scale.
 
 
 
-\section{Discussion/Interpretation/Analysis}
+\section{Discussion}
 
 \subsection{Cylinder Flow}
 
@@ -55,11 +55,11 @@ The cylinder flow dataset provides a strong benchmark for mesh-free operator lea
     \caption{\label{fig:geo-fno-cylinder-result-unsteady} Representative Geo-FNO prediction on the cylinder flow dataset for a sample consistent with periodic vortex shedding in the wake region. The panels show the initial velocity field, the ground-truth final velocity field, the model prediction, and the pointwise difference between prediction and ground truth. Unlike the near-steady case, the downstream wake remains time-periodic and oscillates around a mean position. The model accurately captures the overall flow structure but predicts a smoothed mean wake rather than the exact instantaneous phase of the oscillatory tail, leading to larger localized errors downstream of the cylinder.}
 \end{figure}
 
-Since the inlet velocity and viscosity are fixed across the dataset, the Reynolds number is directly proportional to the cylinder diameter,
+Since the inlet speed and viscosity are fixed across the dataset, the Reynolds number is directly proportional to the cylinder diameter,
 \begin{equation}
 Re = \frac{UD}{\nu},
 \end{equation}
-where $U$ is the inlet velocity, $D$ is the cylinder diameter, and $\nu$ is the kinematic viscosity. Larger cylinders therefore correspond to higher Reynolds numbers and stronger wake instability, making the prediction task progressively more difficult as the obstacle size increases.
+where $U$ is the inlet speed, $D$ is the cylinder diameter, and $\nu$ is the kinematic viscosity \cite{cylinder-flow-re}. Larger cylinders therefore correspond to higher Reynolds numbers and stronger wake instability, making the prediction task progressively more difficult as the obstacle size increases.
 
 Figure~\ref{fig:geo-fno-cylinder-result} shows that geo-FNO captures the dominant structure of the flow well, including the global velocity field around the obstacle and the downstream wake. The largest prediction errors are concentrated in the wake region behind the cylinder rather than near the obstacle itself. This is physically reasonable, since the downstream wake is highly sensitive to small perturbations and contains the most dynamically complex part of the solution.
 

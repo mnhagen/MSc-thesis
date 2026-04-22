@@ -331,7 +331,7 @@ A further limitation is that the success of geo-FNO depends heavily on the learn
 
 Although geo-FNO avoids explicit pre-interpolation onto a Cartesian grid, it does not completely remove representation dependence. The quality of the learned operator still depends strongly on the spatial distribution of the input points. Poor geometric coverage, highly clustered sampling, or insufficient resolution near important local features may all produce unstable spectral representations, even after coordinate transformation. As a result, model performance depends not only on how many points are available, but critically on where those points are located relative to the underlying physics.
 
-\section{Discretization Invariance on Mesh-Free Grids} \label{mesh-free-discretization-invariance}
+\section{Discretization Invariance on Mesh-Free Grids} \label{mesh-free-discretization}
 
 So far, discretization invariance has primarily been discussed in the context of functions represented on uniform Cartesian grids. In that setting, the concept is relatively straightforward: increasing the resolution corresponds to decreasing the grid spacing while preserving the same underlying domain. A model can therefore be tested by training on one resolution and evaluating on another, allowing discretization invariance to be interpreted as robustness to resolution transfer.
 

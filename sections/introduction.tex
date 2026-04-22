@@ -1,24 +1,45 @@
 \chapter{\label{cha:intro}Introduction}
 
-PDEs are very important in many scientific and engineering domains etc etc etc
-classical solvers expensive
-learning-based surrogates can perform similarly but produce answers in a fraction of the time
-standard machine learning approaches are vector to vector, we want function to function
-define discretization invariance and how it relates to neural operators/function to function architectures
-include research questions and motivation for the work, and a brief summary of the contributions of the thesis. The introduction should provide a clear overview of the problem being addressed, the significance of the research, and how the thesis is structured to address the research questions.
+Partial differential equations (PDEs) are central to scientific computing and engineering because they describe how physical systems evolve. Fluid flow, heat transfer, structural deformation, neutron transport, and porous-media flow can all be formulated through PDEs. In nuclear engineering in particular, reactor analysis depends heavily on solving large coupled PDE systems describing neutronics, thermohydraulics, heat conduction, and structural behavior.
 
-\section{Research Question(s)}
+Classical numerical methods such as finite difference, finite element, and finite volume methods provide accurate solutions to these problems, but they are often computationally expensive. High-fidelity simulations may require fine spatial discretizations, long transient integrations, or repeated solves under varying parameters. This becomes particularly challenging in applications such as optimization, uncertainty quantification, design studies, and real-time decision support, where the same governing equations must be solved many times under different conditions.
 
-The research question investigated in this thesis is \ldots
+This motivates the use of learning-based surrogate models; machine learning models trained to emulate the behavior of expensive numerical solvers while producing predictions at orders-of-magnitude lower computational cost \cite{ml-good}. Once trained, such models can provide rapid evaluations of complex physical systems, making them attractive for engineering workflows where repeated PDE solves are the primary computational bottleneck.
 
-Main research question:
+However, standard machine learning models are typically formulated as mappings between finite-dimensional vectors. A conventional neural network learns a mapping of the form
+\[
+x \mapsto y,
+\]
+where both the input and output are fixed-dimensional vectors. PDE problems, however, are naturally function-to-function problems. The input may be an initial condition, boundary condition, forcing term, or material coefficient field, while the output is itself a function such as a pressure field, temperature distribution, or velocity field. The object being learned is therefore not a vector-valued map, but an operator between function spaces.
+
+Neural operators were introduced to address this setting directly. Rather than learning a mapping between discretized vectors, they aim to approximate the underlying continuous solution operator of a PDE. Instead of learning a map tied to one specific discretization, the model approximates the operator itself, allowing the same learned model to be evaluated across multiple discretizations of the same underlying problem. This property is one of the main distinctions between neural operators and standard surrogate models.
+
+This property is commonly referred to as discretization invariance. Informally, a discretization-invariant model should produce consistent predictions when the same underlying function is represented on different discretizations, provided those discretizations sufficiently resolve the relevant physics. In this sense, the model depends on the underlying continuous object rather than on the particular grid used to represent it.
+
+Discretization invariance is one of the central criteria used to evaluate neural operators in practice. In this thesis, it is examined directly on uniform Cartesian grids through resolution-transfer experiments, and later discussed in the context of non-uniform meshes and point clouds, where the notion of discretization is less straightforward and does not admit the same type of evaluation.
+
+This motivates the two-part structure of this thesis. The first part investigates discretization invariance on uniform Cartesian grids using two important neural operator architectures: the Fourier Neural Operator (FNO) and the Convolutional Neural Operator (CNO). These models are evaluated on Navier--Stokes and Darcy flow benchmarks to study how architectural choices affect robustness under resolution transfer.
+
+The second part considers mesh-free operator learning on irregular domains using the geometry-aware Fourier Neural Operator (Geo-FNO). The goal here is to evaluate whether operator learning can be performed directly on non-uniform meshes while preserving physically meaningful predictions. This is studied on both a standard fluid benchmark involving incompressible flow past a cylinder and a reactor-relevant high-temperature gas-cooled reactor (HTGR) temperature dataset.
+
+In addition to evaluating these architectures, this thesis also investigates practical implementation issues that affect operator learning on irregular domains. In particular, a bug in the original Geo-FNO implementation was identified and corrected, removing a persistent seam artifact that appeared across all tested datasets and significantly improving predictive accuracy. The proposed fix was later incorporated into the official implementation.
+
+The central research question investigated in this thesis is:
+
 \begin{itemize}
-    \item To what extent can neural operator methods provide discretization-robust surrogate models for PDE-based data on both uniform grids and non-uniform point clouds?
+    \item To what extent can Fourier- and convolution-based neural operator methods provide discretization-robust surrogate models for PDE-based data on both uniform grids and non-uniform point clouds?
 \end{itemize}
 
-Sub research questions:
+This is further divided into the following sub-questions:
+
 \begin{itemize}
     \item To what extent do FNO and CNO generalize across grid resolutions on uniform-grid PDE benchmarks?
+    
     \item How effectively can Geo-FNO extend Fourier neural operators to non-uniform point-cloud data?
-    \item What limitations are observed when applying Geo-FNO to reactor-relevant non-uniform data?
+    
+    \item What limitations arise when applying Geo-FNO to reactor-relevant data defined on irregular meshes?
 \end{itemize}
+
+The main contributions of this thesis are threefold. First, it provides a systematic comparison of FNO and CNO under resolution transfer, showing how spectral truncation, fixed internal resampling, and aliasing control affect discretization robustness. Second, it evaluates Geo-FNO on irregular-domain problems and clarifies how discretization invariance should be interpreted in the mesh-free setting. Third, it demonstrates the applicability of neural operators to reactor-relevant non-uniform data while identifying both practical limitations of the current datasets and implementation issues that arise in real mesh-free applications.
+
+The remainder of this thesis is structured as follows. Chapter~\ref{cha:background} introduces the theoretical background of operator learning, discretization invariance, and the neural operator architectures studied in this work. Chapter~\ref{cha:method} describes the datasets, training procedures, and experimental design. Chapter~\ref{cha:uniform-results-discussion} presents the uniform-grid experiments and discusses the behavior of FNO and CNO under resolution transfer. Chapter~\ref{cha:non-uniform-results-discussion} presents the mesh-free experiments with Geo-FNO on irregular domains and discusses their implications for discretization invariance on non-uniform meshes. Finally, Chapter~\ref{cha:conclusion} summarizes the conclusions of the thesis and outlines directions for future work.
