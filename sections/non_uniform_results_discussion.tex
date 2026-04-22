@@ -6,7 +6,7 @@
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/htgr_trigonometric_pred.png}
+    \includegraphics[width=0.9\textwidth]{figures/cylinder_flow_prediction_difference.png}
     \caption{\label{fig:geo-fno-cylinder-result} Representative geo-FNO prediction on the cylinder flow dataset. The panels show the initial velocity field, the ground-truth final velocity field, the model prediction, and the pointwise difference between prediction and ground truth.}
 \end{figure}
 
@@ -45,46 +45,56 @@ scale.
 
 \section{Discussion/Interpretation/Analysis}
 
-This section should connect the non-uniform results back to the role of
-geo-FNO as an extension of FNO to irregular spatial data. It should also
-make clear that these experiments evaluate performance on held-out
-samples, not discretization invariance in the uniform-grid sense.
+\subsection{Cylinder Flow}
 
-\subsection{Cylinder flow}
+The cylinder flow dataset provides a strong benchmark for mesh-free operator learning because the model must solve two difficulties simultaneously: learning nontrivial fluid dynamics and doing so directly on an irregular spatial representation. Unlike the uniform-grid experiments in the previous chapter, the geometry itself varies between samples through changes in the cylinder diameter, and the solution must be predicted on a non-uniform point cloud rather than on a fixed Cartesian grid. The task is therefore not only to learn the evolution of the velocity field, but also to remain consistent across changing geometries and irregular sampling patterns.
 
-Discuss why the cylinder flow task is a meaningful non-uniform
-benchmark. Mention the varying geometry, varying point clouds, and the
-fact that the model must predict a vector field on an irregular spatial
-domain.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/cylinder_flow_prediction_difference_no_steady_state.png}
+    \caption{\label{fig:geo-fno-cylinder-result-unsteady} Representative Geo-FNO prediction on the cylinder flow dataset for a sample consistent with periodic vortex shedding in the wake region. The panels show the initial velocity field, the ground-truth final velocity field, the model prediction, and the pointwise difference between prediction and ground truth. Unlike the near-steady case, the downstream wake remains time-periodic and oscillates around a mean position. The model accurately captures the overall flow structure but predicts a smoothed mean wake rather than the exact instantaneous phase of the oscillatory tail, leading to larger localized errors downstream of the cylinder.}
+\end{figure}
 
-Discuss the error structure in the representative prediction. The largest source of error now is "steady state". not all samples appear to have reached a comparable steady or quasi-steady state by the final time. This is a dataset limitation, not model limitation. Some samples possess a tail that oscillates about a mean position at the final time. This is very hard for the "one shot" (I dont remember what its called, but a model that predicts the final state directly from the initial state instead of an auto rollout approach) geo-FNO to learn. This made the hyperparameter sweep quite difficult, as it was not expected for the model to manage to capture the transient behavior of the samples that had not reached a steady state, and the loss was very high for those samples.
+Since the inlet velocity and viscosity are fixed across the dataset, the Reynolds number is directly proportional to the cylinder diameter,
+\begin{equation}
+Re = \frac{UD}{\nu},
+\end{equation}
+where $U$ is the inlet velocity, $D$ is the cylinder diameter, and $\nu$ is the kinematic viscosity. Larger cylinders therefore correspond to higher Reynolds numbers and stronger wake instability, making the prediction task progressively more difficult as the obstacle size increases.
 
-Other things to discuss? discuss where in the plot the loss is high. other?
+Figure~\ref{fig:geo-fno-cylinder-result} shows that geo-FNO captures the dominant structure of the flow well, including the global velocity field around the obstacle and the downstream wake. The largest prediction errors are concentrated in the wake region behind the cylinder rather than near the obstacle itself. This is physically reasonable, since the downstream wake is highly sensitive to small perturbations and contains the most dynamically complex part of the solution.
 
-\subsection{HTGR column temperature dataset}
+For some samples, the dominant prediction error occurs in the wake region downstream of the cylinder, where the flow does not appear to converge to a simple steady wake structure. Instead, the ground truth shows a more oscillatory downstream pattern, while the model tends to predict a smoother mean wake. This behavior is illustrated in Figure~\ref{fig:geo-fno-cylinder-result-unsteady}. This is consistent with an unsteady wake regime, which may arise from several causes.
 
-The strong performance on this dataset should be interpreted in the
-context of the task. The HTGR dataset is smoother and lower-dimensional
-than the cylinder flow benchmark: the input consists only of the
-boundary temperature and axial level\footnote{As described in appendix \ref{appendix:htgr-input-engineering}, a trigonometric representation of z and T was found to exhibit the lowest loss and was therefore used for the HTGR results reported in the main text.}, and the mesh is shared across all
-samples. The result therefore demonstrates that geo-FNO can be applied
-to reactor-relevant non-uniform data, but it does not by itself establish
-performance on more complex nuclear engineering datasets.
+One possibility is that some samples have not fully relaxed to a steady solution by the final simulation time, so the model is asked to predict a transient state rather than a converged final configuration. Another possibility is that, for larger cylinders corresponding to higher Reynolds numbers, the wake enters an oscillatory regime associated with periodic vortex shedding rather than converging to a static steady state \cite{cylinder-wake}. In the dataset, these more oscillatory wake structures are observed primarily for the larger cylinders, which makes vortex shedding the most likely explanation.
 
-refer again to Appendix~\ref{appendix:htgr-input-engineering}?
+Regardless of the cause of the oscillatory behavior, the difficulty remains the same: the model performs one-shot prediction of the final state directly from the initial condition, rather than explicitly evolving the flow through time. Predicting the exact instantaneous state of an unsteady wake is therefore significantly more difficult than predicting its mean structure, since small differences in phase can produce large pointwise differences downstream while leaving the overall flow pattern largely unchanged.
 
-\subsection{Role of geo-FNO}
+As a result, the model often captures the correct average wake location while smoothing out the instantaneous downstream variations. This leads to relatively high loss despite strong qualitative agreement with the overall flow field, particularly in the wake region where the solution is most sensitive to transient effects.
 
-Discuss what the non-uniform results do and do not show. They show that
-geo-FNO can be applied directly to irregular spatial representations and
-produce meaningful predictions on held-out data. They do not show
-discretization invariance in the same sense as the uniform-grid
-experiments, because no systematic variation in point-cloud density or
-mesh resolution was tested.
+These results suggest that a significant portion of the remaining error is associated with predicting the exact instantaneous phase of an unsteady wake rather than with failure to capture the dominant flow physics. Geo-FNO successfully learns the global flow structure and the mean wake behavior, but pointwise error metrics such as MSE penalize phase shifts in the downstream oscillatory region heavily, even when the overall physical prediction is qualitatively correct. This makes one-shot surrogate prediction of the final state fundamentally more difficult than autoregressive rollout approaches that explicitly evolve the flow through time.
 
-This is also the place to mention whether the learned coordinate mapping
-$\phi$ is useful to show. If $\phi$ helps explain the result or a failure
-mode, include it as a separate analysis figure. If it is not discussed
-directly, it is better left out of the main text or moved to an appendix.
 
-is this section useful? is there anything else to talk about in this chapter? other things to discuss?
+
+\subsection{HTGR Column Temperature Dataset}
+
+The strong performance of geo-FNO on the HTGR column temperature dataset should be interpreted in the context of the structure of the task. Compared to the cylinder flow benchmark, this problem is both smoother and lower-dimensional. The output field is a scalar temperature distribution rather than a vector-valued velocity field, and the dominant physical behavior is governed by diffusion and heat transport rather than strongly nonlinear wake dynamics.
+
+In addition, the spatial mesh is shared across all samples. Unlike the cylinder flow dataset, where both the geometry and the point cloud vary between samples, the geo-FNO is always evaluated on the same underlying irregular mesh. The model therefore does not need to adapt to changing geometries or different point distributions, and the challenge is focused primarily on learning the temperature field itself rather than learning across varying spatial representations.
+
+The input space is also significantly simpler. As described in Section~\ref{htgr-column-dataset}, the prediction depends only on the boundary temperature and the axial position of the slice\footnote{As discussed in Appendix~\ref{appendix:htgr-input-engineering}, a trigonometric representation of $z$ and $T$ produced the lowest loss and was therefore used for the results reported here.}. This makes the task closer to learning a smooth parametric family of temperature fields than to solving a fully general operator learning problem with high-dimensional functional inputs.
+
+Figure~\ref{fig:geo-fno-htgr-result} shows that geo-FNO reproduces the dominant temperature structure very accurately. The prediction captures both the global temperature gradient and the local spatial variation across the irregular mesh, while the difference plot shows only small local deviations relative to the overall temperature scale.
+
+These results show that geo-FNO can be applied successfully to reactor-relevant temperature fields defined on non-uniform meshes without requiring interpolation onto a uniform Cartesian grid. This is useful in practice, since reactor geometries often involve curved boundaries and spatial layouts that are not naturally represented on regular grids.
+
+At the same time, the relative simplicity of the HTGR task should be kept in mind. Because the geometry is fixed, the field is smooth, and the input space is low-dimensional, this experiment is best interpreted as a proof of applicability rather than a demonstration of performance on more complex reactor simulations. It shows that geo-FNO can operate effectively on irregular reactor meshes, but does not by itself establish performance on fully general multiphysics reactor problems.
+
+\subsection{Interpretation of Discretization Invariance on Mesh-Free Grids}
+
+As discussed in Section~\ref{mesh-free-discretization-invariance}, discretization invariance on non-uniform meshes cannot be interpreted through resolution transfer in the same way as on uniform Cartesian grids. Since there is no single notion of grid spacing for a point cloud, increasing the number of points alone does not provide a meaningful measure of resolution unless the spatial distribution of those points is also controlled. For this reason, no direct analogue of the resolution-transfer experiments performed for the FNO and CNO was conducted for geo-FNO.
+
+Instead, the mesh-free experiments evaluate whether the model can produce stable and physically meaningful predictions directly on irregular spatial representations and across changing geometries. In the cylinder flow dataset, both the geometry and the point cloud vary between samples, making generalization significantly more demanding than on a fixed mesh. Successful prediction in this setting therefore provides evidence that the model is learning an operator rather than memorizing a particular discretization. In the HTGR dataset, the mesh is fixed, but the results demonstrate that geo-FNO can still be applied effectively to reactor-relevant fields defined on non-uniform domains without requiring interpolation onto a uniform Cartesian grid.
+
+This also connects to the characterization of neural operators introduced in Section~\ref{sec:discretization-invariance}. Geo-FNO naturally satisfies discretization flexibility and pointwise evaluation more directly than standard uniform-grid architectures, since it can accept input data defined on irregular point clouds and produce predictions at arbitrary query locations. Continuum consistency, however, is more difficult to verify experimentally in the mesh-free setting because there is no canonical notion of systematic mesh refinement comparable to uniform-grid resolution transfer.
+
+The results of this chapter should therefore not be interpreted as a direct demonstration of discretization invariance in the same sense as the uniform-grid experiments. Rather, they show that geo-FNO is robust to irregular sampling and geometric variation while maintaining meaningful predictive performance. In the mesh-free setting, this robustness is the practical analogue of discretization invariance: the ability to learn a stable approximation of the underlying continuous operator despite the absence of a fixed regular discretization.

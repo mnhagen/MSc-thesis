@@ -14,7 +14,7 @@ source, and the aspects of the dataset that are relevant for
 interpreting the results. Dataset-specific implementation details are
 included only when they affect the conclusions drawn later in the
 thesis. In particular, the full generation procedure for the
-self-generated Navier-Stokes dataset is deferred to Appendix~\ref{navier-details}. For all datasets, 80\% of the samples were used for training and 20\% for testing, unless otherwise noted.
+self-generated Navier-Stokes dataset is deferred to Appendix~\ref{navier-details}.
 
 \subsection{Uniform-grid datasets}
 
@@ -291,8 +291,6 @@ representations that are more informative for a machine learning model,
 and prior work has shown that such transformations can improve
 predictive performance \cite{feature-engineering}.
 
-TO BE EXPLAINED HERE: CONNECT CYLINDER FLOW TO THEORY ON GEO-FNO. EXPLAIN THAT "CODE" HERE IS THE X AND Y COORDINATES OF THE CYLINDER'S CENTER AND ITS RADIUS. THIS IS SEPARATE FROM THE POINTWISE QUANTITIES OUTLINED IN THE FEATURE ENGINEERING APPENDIX
-
 For the cylinder flow dataset, the model did not produce meaningful
 predictions when it was given only the velocity field on the irregular
 mesh. The coordinate transform MLP $\phi^{-1}$ was given the x and y coordinates of the cylinder's center and its radius. In addition to the horizontal and vertical velocity
@@ -323,5 +321,5 @@ representations, rather than as a direct analogue of the uniform-grid
 discretization-invariance study. Implementation issues encountered
 during development, including the seam artifact observed in early
 geo-FNO predictions, are discussed separately in
-Appendix~\ref{geo-fno-seam}. The results in the main text are reported
+Appendix~\ref{cha:geo-fno-bug-fix}. The results in the main text are reported
 using the corrected implementation.
