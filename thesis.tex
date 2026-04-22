@@ -88,17 +88,17 @@
 \maketitle                                      % for the cover page
 \makeformaltitlepages{\input{sections/abstract}}         % for formal title pages with all info
 
-\include{sections/preface}
+\input{sections/preface}
 
 \cleardoublepage\tableofcontents
 \cleardoublepage\mainmatter
 
-\include{sections/introduction} 
-\include{sections/background} 
-\include{sections/method}
-\include{sections/uniform_results_discussion}
-\include{sections/non_uniform_results_discussion}
-\include{sections/conclusions} 
+\input{sections/introduction} 
+\input{sections/background} 
+\input{sections/method}
+\input{sections/uniform_results_discussion}
+\input{sections/non_uniform_results_discussion}
+\input{sections/conclusions} 
 
 % Include references cited only in the appendix while keeping the
 % bibliography before the appendix.
@@ -108,8 +108,7 @@
 
 \appendix
 \def\chaptername{Appendix}
-\include{sections/appendix}
-\include{sections/requirements}
+\input{sections/appendix}
 
 
 \end{document}

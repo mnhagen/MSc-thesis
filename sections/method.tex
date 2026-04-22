@@ -39,15 +39,11 @@ For the regular-grid experiments, we use a self-generated two-dimensional Navier
 
 where $\omega$ denotes the vorticity field, $u$ the incompressible velocity field, $\nu$ the viscosity, and $f$ an external forcing term. The learning task considered in this thesis is not a pressure or velocity prediction problem, but an operator mapping from an initial vorticity field to a later vorticity field. The input to the model is the initial vorticity field $\omega(\cdot,0)$, and the output is the vorticity field at a later time $\omega(\cdot,T)$. An example input-output pair is shown in Figure~\ref{fig:navier}.
 
-The dataset consists of 1000 samples generated at a resolution of $256 \times 256$. Between samples, the viscosity and forcing remain fixed, while the initial vorticity field is varied.
-
-Further details on the data-generation procedure are provided in Appendix~\ref{navier-details}.
-
-ADD SOMETHING MORE HERE: mention that we saw some strange behavior for the geo-FNO, namely the central artifact/seam in predictions for all datasets. As part of the troubleshooting process, we generated different versions of the Navier-stokes dataset with different sampling patterns. In addition to the uniform grid seen above, a central-clustered, left-clustered and near uniform grid were produced. This dataset is well suited for this purpose as the initial condition is generated in Fourier space, which is continuously defined in physical space. This lets us generate the same underlying physical dataset on different spatial discretizations, which is not possible for the other datasets. Refer to whatever section you end up explaining the seam and how it was fixed in. Decide if this was actually useful for troubleshooting purposes or not and whether to include it, but if you do, it should be mentioned here.
+The dataset consists of 1000 samples generated at a resolution of $256 \times 256$. Between samples, the viscosity and forcing remain fixed, while the initial vorticity field is varied. Further details on the data-generation procedure are provided in Appendix~\ref{navier-details}.
 
 \subsubsection{Darcy flow}\label{darcy-flow}
 
-Also used for the uniform grid experiments is the Darcy flow dataset introduced by Li et al.\cite{li2021fno}. 
+Also used for the uniform grid experiments is the Darcy flow dataset introduced by Li et al. \cite{li2021fno}. 
 In this benchmark, the task is to learn the solution operator of a steady-state two-dimensional Darcy flow problem
 on the unit square, governed by the following PDE:
 
@@ -79,23 +75,6 @@ on the unit square, governed by the following PDE:
 The experiments on irregular domains primarily use two datasets: an incompressible Euler
 dataset modeling flow past a cylinder and a nuclear engineering
 dataset consisting of temperature profiles for a single HTGR column.
-
-\subsubsection{Elasticity}
-
-The elasticity dataset is included because it is one of the canonical
-benchmarks used to evaluate geo-FNO on non-uniform meshes. It provides
-a direct connection to the original geo-FNO setting and therefore helps
-assess whether the implementation used in this thesis reproduces the
-expected behavior on an established test case.
-
-In the dataset description, it is enough to explain the physical problem
-at a high level, describe the input and output quantities, and note that
-the data is defined on an irregular geometry rather than a uniform
-Cartesian grid. The main text should also cite the original source and
-report the experimental resolution or mesh representation at the level
-needed to interpret the results.
-
-Should I include this at all? maybe for the troubleshooting section for finding the seam. Maybe add another subsection after non uniform grids called troubleshooting grids where I just add elasticity and non uniform NS
 
 \subsubsection{Incompressible Navier-Stokes flow past a cylinder}\label{cylinder-flow-dataset}
 
@@ -212,7 +191,7 @@ parameters, are given in Appendix~\ref{appendix:hyperparameters}.
 The uniform-grid experiments are designed to evaluate discretization
 invariance by testing how well a model trained at one spatial resolution
 generalizes to other resolutions. The Navier-Stokes and Darcy flow
-datasets described in \ref{navier-stokes} and \ref{darcy-flow} respectively are used for these experiments. For each dataset, the models are trained at a chosen training resolution and then
+datasets described in \ref{navier-stokes} are used for these experiments. For each dataset, the models are trained at a chosen training resolution and then
 evaluated both at the training resolution and at lower and higher
 resolutions. This makes it possible to compare performance at the
 training resolution with performance after transferring the same trained
@@ -228,7 +207,7 @@ grid points.
 Four model variants are compared for each dataset. The first two are FNO
 models retaining either 8 or 16 Fourier modes in each spatial direction,
 denoted FNO\_k8 and FNO\_k16. The other two are CNO variants. The first is
-the regular CNO architecture as outlined in section REFER TO THEORY SECTION HERE, referred to as CNO\_standard. The second is a modified CNO in which the
+the regular CNO architecture as outlined in section \ref{sec:cno}, referred to as CNO\_standard. The second is a modified CNO in which the
 upsample-nonlinearity-downsample (UND) operation is replaced by a simple pointwise nonlinearity, referred to as CNO\_no\_UND. This operation is one of the architectural changes that distinguishes the CNO from a
 U-Net-like architecture and is intended to reduce aliasing effects
 introduced by nonlinearities. Comparing the standard and modified CNO
