@@ -184,13 +184,14 @@ This appendix provides a complete list of the hyperparameters used for each mode
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/navier_spectral.png}
-    \caption{\label{fig:cylinder-flow-seam} Representative Geo-FNO prediction on the cylinder flow dataset before and after the bug fix. From left to right, this plot shows the ground truth, the original prediction with the seam artifact, the unpatched model trained without the learned coordinate mapping $\phi^{-1}$, and the corrected prediction after fixing the Fourier mode reconstruction.}
+    \includegraphics[width=0.9\textwidth]{figures/geo-fno-performance-comparison.png}
+    \caption{\label{fig:cylinder-flow-seam} Representative Geo-FNO prediction on the cylinder flow dataset before and after correcting the Fourier mode reconstruction bug. In the first row, from left to right, the ground truth, the original prediction containing the seam artifact, and the corrected prediction after patching the negative-mode reconstruction are shown using a shared color scale for direct comparison. The second row shows the prediction of the unpatched model trained without the learned coordinate mapping $\phi^{-1}$. This case is displayed with a separate colorbar due to the significantly larger artifact amplitude and resulting difference in value range.}
 \end{figure}
+
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/navier_spectral.png}
+    \includegraphics[width=0.9\textwidth]{figures/iphi-before-after.png}
     \caption{\label{fig:iphi-before-after} Learned coordinate mapping $\phi^{-1}$ before and after the bug fix. The left panel shows the mapping learned by the original implementation, which exhibits a vertical split of the domain. The right panel shows the mapping learned after correcting the Fourier mode reconstruction, which no longer exhibits this artificial split.}
 \end{figure}
 
