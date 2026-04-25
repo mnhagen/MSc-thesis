@@ -5,6 +5,7 @@
 \usepackage{url}
 \usepackage{mscthesis}
 \usepackage{lipsum} % standard filler text, only needed for demo
+\usepackage{multirow}
 
 % %% The package 'algorithm' is useful, but incompatible with memoir.
 % %% Cor-Paul Bezemer / http://homes.esat.kuleuven.be/~dvherten/esatthesis.html
@@ -22,6 +23,88 @@
 \usepackage{etoolbox}
 \usepackage{amsmath}
 \usepackage{amssymb}
+
+% Keep the abstract and thesis committee together on the formal title page.
+\makeatletter
+\def\makeformaltitlepages#1{%
+\begingroup\newpage
+\thispagestyle{empty}\setcounter{page}{1}
+\let\footnotesize\small \let\footnoterule\relax
+\noindent\rule{\textwidth}{1.5pt}
+\vskip 1em
+\begin{center}
+{\Huge \@title \par}
+\vskip 1em
+\rule{\textwidth}{1.5pt} \par \nobreak
+\vskip 4em
+{\large THESIS}
+\vskip 2em
+{\large submitted in partial fulfillment of the \\
+requirements for the degree of }
+\vskip 2em
+{\large \@reporttype}
+\vskip 2em
+in
+\vskip 2em
+{\large \@major}
+\vskip 2em
+by
+\vskip 2em
+{\large \begin{tabular}[t]{c}
+\@author \\
+\ifbirthplace@defined
+born in \@birthplace{}
+\fi
+\end{tabular}}
+\vfill
+\ifcompany@defined
+  \end{center}
+  \begin{tabular}{@{}l@{}r@{}}
+    \begin{minipage}[b]{.54\textwidth}\@university\end{minipage} &
+    \begin{minipage}[b]{.46\textwidth}\flushright\@company\end{minipage}
+  \end{tabular}
+\else
+  \@university
+  \end{center}
+\fi
+\newpage
+\thispagestyle{empty}
+\mbox{}
+\vfill
+\@colophon{}
+\cleardoublepage
+\thispagestyle{empty}\setcounter{page}{1}
+\noindent\rule{\textwidth}{1.5pt}
+\begin{center}
+  {\Huge \@title \par}
+\end{center}
+\noindent\rule{\textwidth}{1.5pt}
+\vskip 1.5em
+\noindent\makebox[\textwidth][c]{%
+\begin{minipage}{1.12\textwidth}
+\noindent\begin{tabular}{@{}ll@{}}
+Author: & \@author \\
+Student id: & \@studentid \\
+Email: & \@authoremail \\
+\end{tabular}
+\vskip 1.5em
+\begin{abstract}#1\end{abstract}
+\vskip 3em
+\noindent\begin{tabular}{@{}ll@{}}
+Thesis Committee:\\[0.4em]
+Chair: & \@chair\\
+University supervisor: & \@supervisor\\
+\ifexternal@supervisor
+Company supervisor: & \@externalsupervisor\\
+\fi
+\ifcommittee@member
+Committee Member: & \@committeemember\\
+\fi
+\end{tabular}
+\end{minipage}}
+\cleardoublepage\endgroup
+}
+\makeatother
 
 % Used in the bibliography to enable \citeauthor{citation}
 \usepackage[numbers]{natbib}

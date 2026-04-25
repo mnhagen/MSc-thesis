@@ -1,4 +1,4 @@
-\chapter{Experimental Setup}\label{cha:method}
+\chapter{Method}\label{cha:method}
 
 This chapter describes the datasets and training
 procedures used throughout the thesis. It also clarifies how models
@@ -79,12 +79,12 @@ dataset consisting of temperature profiles for a single HTGR column.
 \subsubsection{Incompressible Navier-Stokes flow past a cylinder}\label{cylinder-flow-dataset}
 
 \begin{figure}
-    \label{fig:cylinder-flow}
     \centering
     \includegraphics[width=0.9\textwidth]{figures/cylinder_flow_input_output.png}
     \caption{ Example initial and final states
     for the incompressible flow past a cylinder dataset, shown on the
     irregular geometry together with the underlying point cloud. While the model is tasked with predicting the $v_x$ and $v_y$ components of the velocity field, these plots display the speed $\lVert \mathbf{v} \rVert$.}
+    \label{fig:cylinder-flow}
 \end{figure}
 
 A second non-uniform benchmark is an incompressible Navier-Stokes dataset
@@ -181,9 +181,7 @@ performance.
 
 The hyperparameters differ between the uniform-grid and
 non-uniform-grid experiments, as well as between datasets. To keep the main text focused on the experimental
-design rather than implementation details, full hyperparameter settings,
-including learning rates, batch sizes, training epochs, and architecture
-parameters, are given in Appendix~\ref{appendix:hyperparameters}.
+design rather than implementation details, hyperparameter settings and training details are given in Appendix~\ref{appendix:hyperparameters}.
 
 
 \section{Uniform-grid resolution transfer experiments}\label{uniform-experiments}

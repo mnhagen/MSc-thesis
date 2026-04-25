@@ -127,7 +127,7 @@ dependencies easier for the model to represent.
 Finally, a trigonometric representation was tested using the min--max
 normalized variables together with boundary-aware functions of the axial
 coordinate:
-$(\hat z,\hat T,\sin(\pi(z-z_{\min})/L_z),
+$(\hat z, \hat T, \sin(\pi(z-z_{\min})/L_z), 
  \cos(\pi(z-z_{\min})/L_z),\hat z\hat T)$, where
 $L_z=z_{\max}-z_{\min}$. This choice is more directly motivated by the
 structure of the data. In particular, the sine term vanishes at the
@@ -153,30 +153,90 @@ was therefore used for the HTGR results reported in the main text.
         Input representation & Val relRMSE  & Test relRMSE / MSE \\
         \hline
         $(z, T)$ &
-        $3.334622 \times 10^{-3}$  &
-        $3.752964 \times 10^{-3}$ / $7.120657 \times 10^{0}$ \\
+        $3.3346 \times 10^{-3}$  &
+        $3.7529 \times 10^{-3}$ / $7.1206$ \\
 
         min--max normalized $(\hat z, \hat T)$ &
-        $3.124016 \times 10^{-3}$  &
-        $2.573528 \times 10^{-3}$ / $3.468112 \times 10^{0}$ \\
+        $3.1240 \times 10^{-3}$  &
+        $2.5735 \times 10^{-3}$ / $3.4681$ \\
 
         min--max normalized
         $(\hat z, \hat T, \hat z^2, \hat T^2, \hat z\hat T)$ &
-        $2.925913 \times 10^{-3}$  &
-        $2.443143 \times 10^{-3}$ / $2.997041 \times 10^{0}$ \\
+        $2.9259 \times 10^{-3}$  &
+        $2.4431 \times 10^{-3}$ / $2.9970$ \\
 
-        $(\hat z, \hat T, \sin(\pi(z-z_{\min})/L_z),
-        \cos(\pi(z-z_{\min})/L_z), \hat z\hat T)$ &
-        $2.105979 \times 10^{-3}$ &
-        $2.074195 \times 10^{-3}$ / $2.180137 \times 10^{0}$ \\
+        $(\hat z, \hat T, \sin(\pi \hat z),
+        \cos(\pi \hat z), \hat z\hat T)$ &
+        $2.1059 \times 10^{-3}$ &
+        $2.0741 \times 10^{-3}$ / $2.1801$ \\
         \hline
     \end{tabular}
 \end{table}
 
 
-\chapter{Hyperparameters}\label{appendix:hyperparameters}
+\chapter{Hyperparameters and Training }\label{appendix:hyperparameters}
 
-This appendix provides a complete list of the hyperparameters used for each model and dataset in the experiments described in Chapter~\ref{cha:method}. The hyperparameters include architectural choices, training settings, and any dataset-specific parameters that were relevant for model performance. The listed hyperpameters were determined through a combination of prior literature, preliminary experiments, and manual tuning to achieve good performance.
+This appendix provides a complete list of the hyperparameters used for each model and dataset in the experiments described in Chapter~\ref{cha:method}. The listed hyperparameters were determined through a combination of prior literature, preliminary experiments, and manual tuning to achieve good performance.
+
+For the training of all models, the number of epochs was dictated by a patience scheme. When the validation loss did not improve by at least 0.1\% for 25 consecutive epochs, training was stopped. This means that the exact number of epochs varied across models and datasets. The maximum number of epochs was set sufficiently high so that the patience criterion was always met before reaching it, so between 400 and 1000 epochs depending on the model. All models used the Adam optimizer with a cosine annealing learning rate scheduler. The specific learning rates and other hyperparameters are listed in Tables~\ref{tab:fno-hyperparameters} and \ref{tab:cno-hyperparameters}.
+
+Some model-specific hyperparameters require brief clarification. For the FNO and Geo-FNO, modes (or modes1 and modes2) denote the number of retained Fourier modes in each spatial direction after spectral truncation, while width denotes the number of feature channels in the lifted latent representation. For the CNO, N\_layers controls the depth of the encoder--decoder structure, N\_res and N\_res\_neck denote the number of residual blocks in the encoder/decoder and bottleneck (lowest layer) respectively, and channel\_multiplier determines the number of feature channels at each spatial resolution.
+
+For Geo-FNO, the parameters s1 and s2 define the size of the internal uniform grid used after the initial non-uniform Fourier transform and coordinate mapping. The first Fourier layer operates directly on the irregular input point cloud after the learned coordinate transform $\phi^{-1}$, while the remaining layers use this fixed internal grid. For the cylinder flow dataset, the batch size was set to 1 because different samples contain different numbers of spatial points depending on the cylinder geometry. Constructing minibatches with variable point counts requires additional padding or masking strategies, and batch size 1 provided the simplest and most stable training setup.
+
+
+\begin{table}[]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+Dataset                        & Model    & batch\_size & learning rate    & modes & width \\
+\hline
+\multirow{2}{*}{Navier-Stokes} & FNO\_k8  & 4           & $2\times10^{-4}$ & 8     & 96    \\
+                               & FNO\_k16 & 4           & $2\times10^{-4}$ & 16    & 128   \\
+\hline
+\multirow{2}{*}{Darcy flow}    & FNO\_k8  & 4           & $2\times10^{-4}$ & 8     & 96    \\
+                               & FNO\_k16 & 4           & $2\times10^{-4}$ & 16    & 128   \\
+\hline
+\end{tabular}
+\caption{The used hyperparameters for the FNO models. Only modes is listed, as $\mathrm{modes1} = \mathrm{modes2} = \mathrm{modes}$ was used for all models.}
+\label{tab:fno-hyperparameters}
+\end{table}
+
+\begin{table}[]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+Dataset                        & Model         & batch\_size & learning rate    & N\_layers & N\_res & N\_res\_neck & channel\_multiplier \\
+\hline
+\multirow{2}{*}{Navier-Stokes} & CNO\_standard & 10          & $5\times10^{-4}$ & 4         & 4      & 4            & 16                  \\
+                               & CNO\_no\_UND  & 10          & $5\times10^{-4}$ & 4         & 4      & 4            & 16                  \\
+\hline
+\multirow{2}{*}{Darcy Flow}    & CNO\_standard & 10          & $5\times10^{-4}$ & 4         & 4      & 4            & 16                  \\
+                               & CNO\_no\_UND  & 10          & $5\times10^{-4}$ & 4         & 4      & 4            & 16                  \\
+\hline
+\end{tabular}
+}
+\caption{The used hyperparameters for the CNO models.}
+\label{tab:cno-hyperparameters}
+\end{table}
+
+
+\begin{table}[]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline
+Dataset          & batch\_size & learning rate FNO & learning rate IPHI & modes1 & modes2 & width & s1  & s2 \\
+\hline
+Cylinder flow    & 1           & $1\times 10^{-3}$ & $1\times 10^{-4}$  & 24     & 12     & 32    & 100 & 25 \\
+HTGR temperature & 8           & $1\times 10^{-3}$ & $5\times 10^{-5}$  & 16     & 16     & 32    & 64  & 64 \\
+\hline
+\end{tabular}
+}
+\caption{The used hyperparameters for the Geo-FNO models.}
+\label{tab:geo-fno-hyperparameters}
+\end{table}
 
 
 \chapter{Geo-FNO Bug Fix}
