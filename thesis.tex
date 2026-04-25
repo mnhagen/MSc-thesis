@@ -80,8 +80,7 @@ born in \@birthplace{}
 \end{center}
 \noindent\rule{\textwidth}{1.5pt}
 \vskip 1.5em
-\noindent\makebox[\textwidth][c]{%
-\begin{minipage}{1.12\textwidth}
+\begin{adjustwidth}{-0.06\textwidth}{-0.06\textwidth}
 \noindent\begin{tabular}{@{}ll@{}}
 Author: & \@author \\
 Student id: & \@studentid \\
@@ -101,7 +100,7 @@ Company supervisor: & \@externalsupervisor\\
 Committee Member: & \@committeemember\\
 \fi
 \end{tabular}
-\end{minipage}}
+\end{adjustwidth}
 \cleardoublepage\endgroup
 }
 \makeatother

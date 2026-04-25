@@ -40,7 +40,7 @@ A central question in operator learning is what information about a continuous f
 \begin{figure}
     \centering
     \includegraphics[width=0.8\textwidth]{figures/aliasing.png}
-    \caption{\label{fig:aliasing} an illustration of aliasing. The blue curve represents a high-frequency signal, while the red curve is a lower-frequency function that passes through the same sampled points (black dots). Since both functions agree at the sampling locations, the discrete representation cannot distinguish between them.}
+    \caption{\label{fig:aliasing} An illustration of aliasing. The blue curve represents a high-frequency signal, while the red curve is a lower-frequency function that passes through the same sampled points (black dots). Since both functions agree at the sampling locations, the discrete representation cannot distinguish between them.}
 \end{figure}
 
 Let $f \in L^2(\mathbb{R})$ be a square-integrable function with Fourier transform $\hat{f}$. The function is said to be \textit{bandlimited} with bandlimit $\Omega > 0$ if its Fourier transform is supported only on a finite interval:
@@ -129,7 +129,7 @@ Since training data is always discretized, a model is never directly exposed to 
 
 Discretization invariance is therefore a central criterion for evaluating neural operator architectures. In this thesis, it is used both as a theoretical concept and as an empirical measure for comparing models across changes in resolution.
 
-\section{Fourier neural operator -- FNO}\label{sec:fno}
+\section{Fourier Neural Operator -- FNO}\label{sec:fno}
 
 The Fourier Neural Operator (FNO), introduced by Li et al. \cite{li2021fno}, was the first major neural operator architecture to demonstrate strong performance on large-scale PDE learning problems and remains one of the most influential models in operator learning. Its success established neural operators as a practical alternative to classical numerical solvers and motivated much of the subsequent development in the field \cite{fno-explained}, including architectures such as the Convolutional Neural Operator (CNO) and geo-FNO.
 

@@ -4,7 +4,7 @@ Partial differential equations (PDEs) are central to scientific computing and en
 
 Classical numerical methods such as finite difference, finite element, and finite volume methods provide accurate solutions to these problems, but they are often computationally expensive. High-fidelity simulations may require fine spatial discretizations, long transient integrations, or repeated solves under varying parameters. This becomes particularly challenging in applications such as optimization, uncertainty quantification, design studies, and real-time decision support, where the same governing equations must be solved many times under different conditions.
 
-This motivates the use of learning-based surrogate models; machine learning models trained to emulate the behavior of expensive numerical solvers while producing predictions at orders-of-magnitude lower computational cost \cite{ml-good}. Once trained, such models can provide rapid evaluations of complex physical systems, making them attractive for engineering workflows where repeated PDE solves are the primary computational bottleneck.
+This motivates the use of learning-based surrogate models; machine learning models trained to emulate the behavior of expensive numerical solvers while producing predictions at orders of magnitude lower computational cost \cite{ml-good}. Once trained, such models can provide rapid evaluations of complex physical systems, making them attractive for engineering workflows where repeated PDE solves are the primary computational bottleneck.
 
 However, standard machine learning models are typically formulated as mappings between finite-dimensional vectors. A conventional neural network learns a mapping of the form
 \[
@@ -35,7 +35,7 @@ This is further divided into the following sub-questions:
 \begin{itemize}
     \item To what extent do FNO and CNO generalize across grid resolutions on uniform-grid PDE benchmarks?
     
-    \item How effectively can Geo-FNO extend Fourier neural operators to non-uniform point-cloud data?
+    \item How effectively does Geo-FNO enable Fourier-based operator learning on non-uniform point-cloud data?
     
     \item What limitations arise when applying Geo-FNO to reactor-relevant data defined on irregular meshes?
 \end{itemize}
