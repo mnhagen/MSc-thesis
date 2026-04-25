@@ -259,7 +259,7 @@ During testing of the Geo-FNO, a persistent vertical seam-like artifact appeared
 
 Inspection of the learned coordinate transformation $\phi^{-1}$ revealed that it consistently split the domain along the same vertical line, as illustrated in Figure~\ref{fig:iphi-before-after}. At first glance, this suggested that the learned coordinate mapping itself might be responsible for the artifact. However, training the model without $\phi^{-1}$ caused the seam to become substantially more pronounced, while the prediction quality away from the seam remained largely unchanged and the overall loss increased only modestly. This indicates that the learned behavior of $\phi^{-1}$ was not the source of the artifact, but rather an adaptation to it. By reducing the density of sampled points near the corrupted region, the mapping partially mitigated the visible effect of the reconstruction error without removing its underlying cause.
 
-The source of the artifact was found to be an error in the reconstruction of discarded Fourier modes during the inverse transform. As in the standard FNO, geo-FNO retains only a finite number of Fourier modes in each direction. For a real-valued field, the Fourier coefficients satisfy the Hermitian symmetry condition
+The source of the artifact was found to be an error in the reconstruction of discarded Fourier modes during the inverse transform. As in the standard FNO, Geo-FNO retains only a finite number of Fourier modes in each direction. For a real-valued field, the Fourier coefficients satisfy the Hermitian symmetry condition
 \begin{equation}
 U(-k_x, -k_y) = \overline{U(k_x, k_y)},
 \label{eq:hermitian-symmetry}

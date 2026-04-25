@@ -16,7 +16,7 @@ included only when they affect the conclusions drawn later in the
 thesis. In particular, the full generation procedure for the
 self-generated Navier-Stokes dataset is deferred to Appendix~\ref{navier-details}.
 
-\subsection{Uniform-grid datasets}
+\subsection{Uniform-Grid Datasets}
 
 The discretization invariance experiments on regular grids use two
 datasets: a self-generated Navier-Stokes dataset and a Darcy flow
@@ -70,7 +70,7 @@ on the unit square, governed by the following PDE:
 
 
 
-\subsection{Non-uniform datasets}\label{non-uniform-datasets}
+\subsection{Non-Uniform Datasets}\label{non-uniform-datasets}
 
 The experiments on irregular domains primarily use two datasets: an incompressible Euler
 dataset modeling flow past a cylinder and a nuclear engineering
@@ -115,7 +115,7 @@ to different corresponding flow patterns. In the experiments of this
 thesis, the model is trained to predict only the horizontal and vertical
 velocity components; pressure is not included in the target.
 
-This dataset is particularly relevant for geo-FNO because it is defined
+This dataset is particularly relevant for Geo-FNO because it is defined
 on a non-uniform spatial discretization rather than a regular Cartesian
 grid. An example initial-final pair is shown in
 Figure~\ref{fig:cylinder-flow}. The dataset consists of 1000 samples each containing between 1700 and 2100 points, depending on the geometry of the sample. 200 of these samples were designated for testing, while the remaining 800 were used for training.
@@ -134,7 +134,7 @@ Figure~\ref{fig:cylinder-flow}. The dataset consists of 1000 samples each contai
 The final non-uniform dataset consists of steady-state temperature
 profiles for a single column of a prismatic core high temperature gas-cooled reactor
 (HTGR). This dataset is included because it provides a first
-application-oriented test case for geo-FNO in a nuclear engineering
+application-oriented test case for Geo-FNO in a nuclear engineering
 setting. Unlike the public benchmark datasets considered earlier, the
 data was produced internally as part of ongoing work by a colleague.
 
@@ -247,9 +247,9 @@ only a measure of consistency across resolutions, not of absolute model
 quality. The loss values themselves remain the primary measure of predictive performance, while $D$ is used only as a quantitative measure of discretization robustness.
 
 
-\section{Non-uniform-grid geo-FNO evaluations}\label{non-uniform-experiments}
+\section{Non-Uniform-Grid Geo-FNO Evaluations}\label{non-uniform-experiments}
 
-The non-uniform-grid evaluations use geo-FNO on the cylinder flow and
+The non-uniform-grid evaluations use Geo-FNO on the cylinder flow and
 HTGR column temperature datasets described in
 Section~\ref{non-uniform-datasets}. These evaluations differ from the
 uniform-grid resolution transfer experiments in
@@ -257,7 +257,7 @@ Section~\ref{uniform-experiments}. Since the spatial samples are given
 as point clouds or irregular meshes rather than Cartesian grids, there
 is no single resolution parameter equivalent to the grid size $N$ used
 in the uniform-grid experiments. The goal is therefore not to measure
-resolution transfer, but to evaluate whether geo-FNO can learn mappings
+resolution transfer, but to evaluate whether Geo-FNO can learn mappings
 on irregular spatial data.
 
 Feature engineering was used in the non-uniform experiments to augment
@@ -293,10 +293,10 @@ random split, the validation and test samples are selected using fixed
 subsets of the $(z,T)$ input space.
 
 The non-uniform-grid results should therefore be interpreted as
-held-out-data evaluations of geo-FNO on irregular spatial
+held-out-data evaluations of Geo-FNO on irregular spatial
 representations, rather than as a direct analogue of the uniform-grid
 discretization-invariance study. Implementation issues encountered
 during development, including the seam artifact observed in early
-geo-FNO predictions, are discussed separately in
+Geo-FNO predictions, are discussed separately in
 Appendix~\ref{cha:geo-fno-bug-fix}. The results in the main text are reported
 using the corrected implementation.

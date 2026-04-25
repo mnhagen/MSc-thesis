@@ -131,7 +131,7 @@ Discretization invariance is therefore a central criterion for evaluating neural
 
 \section{Fourier Neural Operator -- FNO}\label{sec:fno}
 
-The Fourier Neural Operator (FNO), introduced by Li et al. \cite{li2021fno}, was the first major neural operator architecture to demonstrate strong performance on large-scale PDE learning problems and remains one of the most influential models in operator learning. Its success established neural operators as a practical alternative to classical numerical solvers and motivated much of the subsequent development in the field \cite{fno-explained}, including architectures such as the Convolutional Neural Operator (CNO) and geo-FNO.
+The Fourier Neural Operator (FNO), introduced by Li et al. \cite{li2021fno}, was the first major neural operator architecture to demonstrate strong performance on large-scale PDE learning problems and remains one of the most influential models in operator learning. Its success established neural operators as a practical alternative to classical numerical solvers and motivated much of the subsequent development in the field \cite{fno-explained}, including architectures such as the Convolutional Neural Operator (CNO) and Geo-FNO.
 
 \begin{figure}
     \centering
@@ -210,7 +210,7 @@ As discussed in the context of aliasing, unresolved high-frequency modes do not 
 
 A second important limitation is the reliance on uniform Cartesian grids. The standard FFT assumes regularly spaced points with consistent ordering, which makes the original FNO naturally suited for structured meshes but difficult to apply directly to irregular geometries or unstructured point clouds.
 
-Finally, although the FNO is often described as discretization invariant, this property only holds approximately and within the setting of uniform grids. Changes in resolution can still lead to discretization mismatch, particularly when the effective frequency content of the problem changes across discretizations. This limitation motivates both the development of the CNO, which addresses representation consistency more explicitly, and geo-FNO, which extends Fourier-based operator learning to irregular domains.
+Finally, although the FNO is often described as discretization invariant, this property only holds approximately and within the setting of uniform grids. Changes in resolution can still lead to discretization mismatch, particularly when the effective frequency content of the problem changes across discretizations. This limitation motivates both the development of the CNO, which addresses representation consistency more explicitly, and Geo-FNO, which extends Fourier-based operator learning to irregular domains.
 
 
 \section{Convolutional Neural Operator -- CNO} \label{sec:cno}
@@ -268,7 +268,7 @@ Another practical limitation is the reliance on interpolation during resampling.
 Finally, while the CNO improves discretization invariance substantially compared to standard U-Nets and often compared to the FNO, it is still not fully resolution-independent in practice. Its behavior remains tied to the chosen internal discretization, meaning that discretization robustness depends strongly on how well this internal representation matches the true frequency content of the underlying problem.
 
 
-\section{Mesh-free Operator Learning and geo-FNO}
+\section{Mesh-free Operator Learning and Geo-FNO}
 
 \subsection{Motivation for Irregular Domains}
 
@@ -286,9 +286,9 @@ These limitations motivate the development of mesh-free neural operators, which 
 
 \subsubsection{Architecture}
 
-The geometry-aware Fourier Neural Operator (geo-FNO), introduced by Li et al. \cite{geo-fno}, extends the original FNO to problems defined on irregular domains such as point clouds and unstructured meshes. While the standard FNO assumes that the input field is represented on a uniform Cartesian grid, geo-FNO is designed to work directly with non-uniformly sampled input data.
+The geometry-aware Fourier Neural Operator (Geo-FNO), introduced by Li et al. \cite{geo-fno}, extends the original FNO to problems defined on irregular domains such as point clouds and unstructured meshes. While the standard FNO assumes that the input field is represented on a uniform Cartesian grid, Geo-FNO is designed to work directly with non-uniformly sampled input data.
 
-Conceptually, geo-FNO can be viewed as a generalization of the original FNO. The core Fourier Neural Operator remains unchanged: the model performs spectral convolution by transforming the input into Fourier space, applying learned complex weights to the retained modes, and transforming back to the spatial domain. The main modification is the introduction of a learned coordinate transformation placed before the FNO, together with non-uniform Fourier transforms at the input and output stages.
+Conceptually, Geo-FNO can be viewed as a generalization of the original FNO. The core Fourier Neural Operator remains unchanged: the model performs spectral convolution by transforming the input into Fourier space, applying learned complex weights to the retained modes, and transforming back to the spatial domain. The main modification is the introduction of a learned coordinate transformation placed before the FNO, together with non-uniform Fourier transforms at the input and output stages.
 
 It is useful to distinguish between three different coordinate systems used in the model. The first is the input grid, corresponding to the original irregular point cloud where the data is given. The second is the computational grid, obtained after applying the learned coordinate transformation $\phi^{-1}$. This grid is still non-uniform, but is mapped into a representation that is more suitable for Fourier learning. The third is the internal grid, which is the uniform Cartesian grid used inside the FNO after the first spectral layer.
 
@@ -306,13 +306,13 @@ At the output stage, the model allows predictions to be made at arbitrary spatia
 
 The final layer of the FNO produces a spectral representation of the solution in terms of Fourier coefficients on the internal grid. Instead of reconstructing the solution only on that grid, the inverse transform can be evaluated directly at the transformed query points. In this way, the model can predict the solution at locations that were not explicitly present during training, including new sensor positions, boundary points, or entirely different point clouds.
 
-This means that geo-FNO satisfies two of the three neural operator conditions discussed in Section~\ref{sec:discretization-invariance}: it can accept inputs defined on irregular point sets and can be evaluated at arbitrary output positions.
+This means that Geo-FNO satisfies two of the three neural operator conditions discussed in Section~\ref{sec:discretization-invariance}: it can accept inputs defined on irregular point sets and can be evaluated at arbitrary output positions.
 
 \subsubsection{Strengths}
 
-The primary strength of geo-FNO is that it extends Fourier-based operator learning to irregular domains without requiring the full problem to be pre-interpolated onto a Cartesian grid before learning begins. This allows the model to work directly on point clouds and unstructured meshes while preserving geometric information that may be lost during interpolation to a regular lattice.
+The primary strength of Geo-FNO is that it extends Fourier-based operator learning to irregular domains without requiring the full problem to be pre-interpolated onto a Cartesian grid before learning begins. This allows the model to work directly on point clouds and unstructured meshes while preserving geometric information that may be lost during interpolation to a regular lattice.
 
-Because the internal operator remains an FNO, geo-FNO retains many of the advantages of spectral operator learning. It still benefits from global receptive fields, efficient FFT-based convolutions in the internal layers, and strong performance on operators dominated by large-scale smooth structure. Compared to fully mesh-based or graph-based approaches, this often provides significantly better computational efficiency.
+Because the internal operator remains an FNO, Geo-FNO retains many of the advantages of spectral operator learning. It still benefits from global receptive fields, efficient FFT-based convolutions in the internal layers, and strong performance on operators dominated by large-scale smooth structure. Compared to fully mesh-based or graph-based approaches, this often provides significantly better computational efficiency.
 
 The learned coordinate transform provides an important representational advantage. Rather than relying on a fixed hand-designed mapping, the model learns a problem-dependent coordinate system jointly with the operator itself. This allows the geometry to be adapted so that the retained low Fourier modes capture more of the physically relevant information, improving approximation quality without requiring a large increase in retained modes.
 
@@ -321,15 +321,15 @@ Another important strength is output flexibility. Since predictions are reconstr
 
 \subsubsection{Weaknesses}
 
-The main limitation of geo-FNO is that it inherits many of the weaknesses of the original FNO. Spectral truncation remains central to the architecture, meaning that high-frequency information is still discarded and the model retains a strong low-frequency bias. For problems dominated by sharp gradients, discontinuities, or highly localized effects, this can still lead to poor approximation quality.
+The main limitation of the Geo-FNO is that it inherits many of the weaknesses of the original FNO. Spectral truncation remains central to the architecture, meaning that high-frequency information is still discarded and the model retains a strong low-frequency bias. For problems dominated by sharp gradients, discontinuities, or highly localized effects, this can still lead to poor approximation quality.
 
 A second challenge arises from the use of non-uniform Fourier transforms. On a uniform Cartesian grid, the Fourier basis is orthogonal under the discrete inner product, meaning that each Fourier coefficient corresponds cleanly to a single frequency mode. Truncating high modes therefore has a clear interpretation: specific frequencies are removed from the representation.
 
 On an irregular point cloud, this orthogonality is lost \cite{nonuniform-fft}. The Fourier basis functions are no longer orthogonal under sampling, and the resulting coefficients become mixtures of multiple true modes rather than clean representations of individual frequencies. As a result, truncating a single Fourier coefficient no longer corresponds to removing one specific mode, but instead removes part of several mixed components. Likewise, applying learned weights to a given coefficient affects a mixture of spectral information rather than a single interpretable frequency. This makes spectral truncation significantly less stable and reduces both computational efficiency and spectral interpretability compared to the standard FNO. 
 
-A further limitation is that the success of geo-FNO depends heavily on the learned coordinate transform. If the mapping learned by $\phi^{-1}$ fails to produce a representation where the retained low Fourier modes are sufficiently informative, the model may still suffer from poor truncation behavior. Since this mapping is learned jointly with the FNO, training can become sensitive to initialization and optimization choices.
+A further limitation is that the success of Geo-FNO depends heavily on the learned coordinate transform. If the mapping learned by $\phi^{-1}$ fails to produce a representation where the retained low Fourier modes are sufficiently informative, the model may still suffer from poor truncation behavior. Since this mapping is learned jointly with the FNO, training can become sensitive to initialization and optimization choices.
 
-Although geo-FNO avoids explicit pre-interpolation onto a Cartesian grid, it does not completely remove representation dependence. The quality of the learned operator still depends strongly on the spatial distribution of the input points. Poor geometric coverage, highly clustered sampling, or insufficient resolution near important local features may all produce unstable spectral representations, even after coordinate transformation. As a result, model performance depends not only on how many points are available, but critically on where those points are located relative to the underlying physics.
+Although Geo-FNO avoids explicit pre-interpolation onto a Cartesian grid, it does not completely remove representation dependence. The quality of the learned operator still depends strongly on the spatial distribution of the input points. Poor geometric coverage, highly clustered sampling, or insufficient resolution near important local features may all produce unstable spectral representations, even after coordinate transformation. As a result, model performance depends not only on how many points are available, but critically on where those points are located relative to the underlying physics.
 
 \section{Discretization Invariance on Mesh-Free Grids} \label{mesh-free-discretization-invariance}
 
@@ -341,7 +341,7 @@ As a result, discretization invariance in the mesh-free setting is better interp
 
 For this reason, no direct resolution-transfer experiments were conducted for the mesh-free datasets considered in this thesis. Unlike the structured-grid setting used for the FNO and CNO, there is no well-posed notion of systematically increasing or decreasing resolution while preserving a comparable discretization. Varying only the number of points would not provide a meaningful measure of discretization invariance without also controlling for point placement.
 
-Instead, the evaluation of geo-FNO focuses on whether the model can produce physically meaningful predictions directly on irregular point clouds and whether learning on the original mesh improves performance compared to interpolation onto a uniform grid. Successful prediction in this setting indicates that the model is able to learn a stable approximation of the underlying operator despite the absence of a fixed uniform discretization.
+Instead, the evaluation of Geo-FNO focuses on whether the model can produce physically meaningful predictions directly on irregular point clouds and whether learning on the original mesh improves performance compared to interpolation onto a uniform grid. Successful prediction in this setting indicates that the model is able to learn a stable approximation of the underlying operator despite the absence of a fixed uniform discretization.
 
 
 
