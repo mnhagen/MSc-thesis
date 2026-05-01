@@ -13,13 +13,12 @@ underlying physical problem, the mapping learned by the model, the data
 source, and the aspects of the dataset that are relevant for
 interpreting the results. Dataset-specific implementation details are
 included only when they affect the conclusions drawn later in the
-thesis. In particular, the full generation procedure for the
-self-generated Navier-Stokes dataset is deferred to Appendix~\ref{navier-details}.
+thesis. In particular, the full generation procedure for the Navier-Stokes dataset generated in this work is deferred to Appendix~\ref{navier-details}.
 
 \subsection{Uniform-Grid Datasets}
 
 The discretization invariance experiments on regular grids use two
-datasets: a self-generated Navier-Stokes dataset and a Darcy flow
+datasets: a Navier-Stokes dataset generated in this work and a Darcy flow
 dataset obtained from prior work.
 
 \subsubsection{Navier-Stokes}\label{navier-stokes}
@@ -30,7 +29,7 @@ dataset obtained from prior work.
     \caption{\label{fig:navier} Initial and final vorticity fields for a sample from the Navier-Stokes dataset.}
 \end{figure}
 
-For the regular-grid experiments, we use a self-generated two-dimensional Navier-Stokes dataset on the unit square. The Navier-Stokes equations are among the fundamental equations of fluid dynamics and arise in many areas of physics and engineering, including atmospheric and oceanic flows, aerodynamics, and industrial transport processes. The dataset is formulated and solved in vorticity form, with governing equation:
+For the regular-grid experiments, we use a two-dimensional Navier-Stokes dataset on the unit square. The Navier-Stokes equations are among the fundamental equations of fluid dynamics and arise in many areas of physics and engineering, including atmospheric and oceanic flows, aerodynamics, and industrial transport processes. The dataset is formulated and solved in vorticity form, with governing equation:
 
 
 \begin{equation}
@@ -80,12 +79,15 @@ dataset consisting of temperature profiles for a single HTGR column.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/cylinder_flow_input_output.png}
-    \caption{ Example initial and final states
+    \makebox[\textwidth][c]{%
+        \includegraphics[width=1.1\textwidth]{figures/cylinder_flow_input_output.png}%
+    }
+    \caption{Example initial and final states
     for the incompressible flow past a cylinder dataset, shown on the
     irregular geometry together with the underlying point cloud. While the model is tasked with predicting the $v_x$ and $v_y$ components of the velocity field, these plots display the speed $\lVert \mathbf{v} \rVert$.}
     \label{fig:cylinder-flow}
 \end{figure}
+
 
 A second non-uniform benchmark is an incompressible Navier-Stokes dataset
 describing fluid flow past a cylinder. This dataset was used in prior
@@ -136,7 +138,7 @@ profiles for a single column of a prismatic core high temperature gas-cooled rea
 (HTGR). This dataset is included because it provides a first
 application-oriented test case for Geo-FNO in a nuclear engineering
 setting. Unlike the public benchmark datasets considered earlier, the
-data was produced internally as part of ongoing work by a colleague.
+data was produced as part of ongoing work by a colleague within the RPNM group.
 
 Physically, the dataset describes the temperature distribution within a
 three-dimensional reactor column. For each case, a constant boundary
@@ -172,11 +174,11 @@ Figure~\ref{fig:htgr-column}.
 \section{Training Setup}
 
 All models are trained in a supervised setting on paired input-output
-samples from the datasets described above. For most datasets, the data is
+samples from the datasets described above. For the uniform experiments, the data is
 split into a training set and a held-out evaluation set. The training set
 is used to optimize the model parameters, while the held-out set is used
 to monitor performance during training and to report final model
-performance. 
+performance. For the non-uniform experiments, a validation set was also included, with all the listed losses being from this set.
 
 
 The hyperparameters differ between the uniform-grid and

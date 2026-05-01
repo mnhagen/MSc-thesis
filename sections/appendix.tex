@@ -252,7 +252,7 @@ HTGR temperature & 8           & $1\times 10^{-3}$ & $5\times 10^{-5}$  & 16    
 \begin{figure}
     \centering
     \includegraphics[width=0.9\textwidth]{figures/iphi-before-after.png}
-    \caption{\label{fig:iphi-before-after} Learned coordinate mapping $\phi^{-1}$ before and after the bug fix. The left panel shows the mapping learned by the original implementation, which exhibits a vertical split of the domain. The right panel shows the mapping learned after correcting the Fourier mode reconstruction, which no longer exhibits this artificial split.}
+    \caption{\label{fig:iphi-before-after} Learned coordinate mapping $\phi^{-1}$ before and after the bug fix. The left panel shows the input grid before any coordinate mapping $\phi^{-1}$ has been applied. The middle panel shows the mapping learned by the original implementation, which exhibits a vertical split of the domain. The right panel shows the mapping learned after correcting the Fourier mode reconstruction, which no longer exhibits this artificial split.}
 \end{figure}
 
 During testing of the Geo-FNO, a persistent vertical seam-like artifact appeared across all tested datasets. The artifact was particularly visible in the cylinder flow dataset, where predictions showed a clear discontinuity along the center of the domain. An example is shown in Figure~\ref{fig:cylinder-flow-seam}, where the predicted solution exhibits a sharp artificial transition that is not present in the ground truth.
@@ -290,4 +290,4 @@ instead of the correct Hermitian symmetry relation in Equation~\ref{eq:hermitian
 
 Correcting the reconstruction so that the discarded modes were matched to their proper conjugate partners removed the artifact entirely. For the cylinder flow dataset, this reduced the mean squared error from approximately $5.5 \times 10^{-3}$ to $4.7 \times 10^{-3}$, corresponding to a reduction of approximately 15\%. The visual seam disappeared completely, as shown in Figure~\ref{fig:cylinder-flow-seam}, while the learned $\phi^{-1}$ mapping no longer exhibited the artificial domain split shown in Figure~\ref{fig:iphi-before-after}.
 
-The issue was reported to the authors of the original Geo-FNO implementation, and the proposed correction was subsequently incorporated into the official repository.
+The issue was reported to the authors of the original Geo-FNO implementation, and the proposed correction was subsequently incorporated into the official repository \cite{geo-fno-repo}.

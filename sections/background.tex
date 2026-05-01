@@ -113,7 +113,7 @@ This property is commonly referred to as discretization invariance. Informally, 
 
 In practice, discretization invariance is most naturally interpreted for functions represented on uniform Cartesian grids, where resolution can be clearly defined through grid spacing. In this setting, it refers to the ability of a model trained at one resolution to make accurate predictions at other resolutions of the same underlying problem.
 
-A widely used characterization of neural operators is given by Kovachki et al. \cite{neural-operators}, who state that a model should satisfy three key properties:
+A widely used definition of neural operators is given by Kovachki et al. \cite{neural-operators}, who state that a neural operator should satisfy three key properties:
 
 \begin{enumerate}
     \item \textbf{Discretization flexibility:} the model can accept inputs defined on arbitrary discretizations of the domain.
@@ -149,9 +149,9 @@ where $a$ is the input function and $u$ is the corresponding solution field. The
 
 The lifting operator maps the input field into a higher-dimensional latent representation,
 \begin{equation}
-\mathcal{P}: a(x) \rightarrow v_0(x),
+\mathcal{P}: a(x) \rightarrow v_1(x),
 \end{equation}
-where $v_0(x)$ contains a larger number of feature channels than the original physical field. This allows the subsequent Fourier layers to operate in a richer latent space rather than directly on the low-dimensional physical variables.
+where $v_1(x)$ contains a larger number of feature channels than the original physical field. This allows the subsequent Fourier layers to operate in a richer latent space rather than directly on the low-dimensional physical variables.
 
 The core of the architecture is the Fourier layer. Given an intermediate representation $v_l(x)$, each layer updates the features according to
 \begin{equation}
@@ -180,7 +180,7 @@ where $R$ denotes the learned complex weights acting on the retained modes.
 
 This frequency-space formulation is what distinguishes the FNO from standard convolutional architectures. Instead of learning kernels tied to a fixed spatial stencil, the model learns transformations of Fourier modes, which correspond to global basis functions spanning the entire domain.
 
-Alongside the spectral path, the term $Wv_l(x)$ provides a local pointwise linear transformation in physical space. This is a channel-mixing operator analogous to a $1 \times 1$ convolution. It allows the model to preserve and update local information that may not be captured effectively by the truncated spectral representation alone.
+Alongside the spectral path, the term $Wv_l(x)$ provides a local pointwise linear transformation in physical space. This is a channel-mixing operator analogous to a $1 \times 1$ convolution. It allows the model to incorporate local, pointwise corrections that cannot be represented by the truncated set of retained Fourier modes. Note that although $W$ and $\mathcal{K}$ are linear operations, the nonlinearity $\sigma$ allows the model to learn nonlinearities.
 
 After several Fourier layers, the projection operator maps the final latent representation back to the physical output space,
 \begin{equation}
@@ -206,7 +206,7 @@ The primary limitation of the FNO is its reliance on spectral truncation. In eac
 
 This should be distinguished from the sampling bandlimit discussed in Section~\ref{sec:bandlimitedness}. There, the Nyquist limit was imposed by the resolution of the data itself; frequencies above that limit could not be represented in the discretized input. In the FNO, an additional bandlimit is imposed by the model architecture, even if higher-frequency information is present in the data. The network therefore discards information that may in principle be available.
 
-As discussed in the context of aliasing, unresolved high-frequency modes do not simply vanish. Instead, they may be systematically folded into lower frequencies, leading to a distorted representation of the underlying function. This issue becomes particularly severe when the target operator depends strongly on localized or high-frequency features, such as sharp gradients, discontinuities, or fine-scale geometric effects. In such cases, the low-mode bias of the FNO can lead to poor generalization across resolutions and unstable behavior under discretization changes.
+As discussed in the context of aliasing, unresolved high-frequency modes do not simply vanish. Instead, they are mapped onto lower-frequency components during discrete sampling, a phenomenon known as folding. Frequencies above the Nyquist limit become indistinguishable from lower frequencies, leading to a distorted representation of the underlying function. This issue becomes particularly severe when the target operator depends strongly on localized or high-frequency features, such as sharp gradients, discontinuities, or fine-scale geometric effects. In such cases, the low-mode bias of the FNO can lead to poor generalization across resolutions and unstable behavior under discretization changes.
 
 A second important limitation is the reliance on uniform Cartesian grids. The standard FFT assumes regularly spaced points with consistent ordering, which makes the original FNO naturally suited for structured meshes but difficult to apply directly to irregular geometries or unstructured point clouds.
 
@@ -229,7 +229,7 @@ Unlike the Fourier Neural Operator, which learns global interactions through Fou
 
 For example, a $3 \times 3$ kernel applied on a coarse grid covers a much larger physical region than the same kernel on a fine grid. As a result, a standard CNN or U-Net is not naturally discretization invariant, since changing the resolution changes the effective operator being learned.
 
-To address this, the CNO uses a multi-scale encoder--decoder architecture together with an initial resampling step onto a fixed internal resolution. Figure~\ref{fig:cno-architecture} illustrates the overall structure. The input is first passed through a lifting layer, which maps the physical input field into a higher-dimensional feature space. This serves the same purpose as in the FNO, allowing the operator to be learned in a richer latent representation.
+To address this, the CNO uses a multi-scale encoder--decoder architecture together with an initial resampling step onto a fixed internal resolution. Figure~\ref{fig:cno-architecture} illustrates the overall structure. After the initial resampling, the input is passed through a lifting layer, which maps the physical input field into a higher-dimensional feature space. This serves the same purpose as in the FNO, allowing the operator to be learned in a richer latent representation.
 
 The lifted representation then enters the encoder, where it passes through a sequence of convolutional blocks. Each block consists of a convolution followed by a nonlinear activation. As the representation moves deeper into the encoder, the spatial resolution is progressively reduced through interpolation-based downsampling, while the number of feature channels is increased. Although the kernel size remains fixed, applying it at multiple resolutions allows the network to process information across different spatial scales.
 
@@ -290,13 +290,13 @@ The geometry-aware Fourier Neural Operator (Geo-FNO), introduced by Li et al. \c
 
 Conceptually, Geo-FNO can be viewed as a generalization of the original FNO. The core Fourier Neural Operator remains unchanged: the model performs spectral convolution by transforming the input into Fourier space, applying learned complex weights to the retained modes, and transforming back to the spatial domain. The main modification is the introduction of a learned coordinate transformation placed before the FNO, together with non-uniform Fourier transforms at the input and output stages.
 
-It is useful to distinguish between three different coordinate systems used in the model. The first is the input grid, corresponding to the original irregular point cloud where the data is given. The second is the computational grid, obtained after applying the learned coordinate transformation $\phi^{-1}$. This grid is still non-uniform, but is mapped into a representation that is more suitable for Fourier learning. The third is the internal grid, which is the uniform Cartesian grid used inside the FNO after the first spectral layer.
+It is useful to distinguish between three different coordinate systems used in the model. The first is the input grid, corresponding to the original irregular point cloud where the data is given. The second is the computational grid, obtained after applying the learned coordinate transformation $\phi^{-1}$. This grid is still non-uniform, but is mapped into a representation that is more suitable for Fourier learning. The notation $\phi^{-1}$ is used to reflect that the learned transformation maps from the physical (irregular) domain to a more structured computational representation. In classical settings, a mapping $\phi$ is typically defined from a reference or structured domain to a physical domain, and the operation required here is therefore its inverse. In practice, only $\phi^{-1}$ is learned and used; the forward map $\phi$ is never explicitly constructed. The third coordinate system is the internal grid, which is the uniform Cartesian grid used within the FNO after the first spectral layer.
 
-The learned coordinate transformation is denoted by $\phi^{-1}$, implemented in the original work as the network IPHI. Given input coordinates $x$, and optionally a vector of geometry parameters $a$, the mapping is defined as
+The learned coordinate transformation is denoted by $\phi^{-1}$, implemented in the original work as the network IPHI. Given input coordinates $x$, and optionally a vector of geometry parameters $g$, the mapping is defined as
 \begin{equation}
-\phi^{-1}(x, a) = x + f(x, a),
+\phi^{-1}(x, g) = x + f(x, g),
 \end{equation}
-where $f(x, a)$ is represented by a lightweight multilayer perceptron and initialized close to zero so that the mapping begins near the identity transformation. The coordinate transform is trained jointly with the FNO and learns a mapping that minimizes the prediction error while adapting to the geometry of the problem.
+where $f(x, g)$ is represented by a lightweight multilayer perceptron and initialized close to zero so that the mapping begins near the identity transformation. The coordinate transform is trained jointly with the FNO and learns a mapping that minimizes the prediction error while adapting to the geometry of the problem.
 
 Importantly, this is a continuous-to-continuous mapping rather than interpolation onto a discrete grid. The transformed points remain irregularly distributed, and the purpose of the mapping is not to force the domain onto a regular mesh, but to provide a coordinate system in which Fourier-based operator learning becomes more effective.
 
