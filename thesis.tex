@@ -2,6 +2,7 @@
 \usepackage{a4}
 \usepackage{times}
 \usepackage{pslatex}
+\usepackage{hyphenat}
 \usepackage{url}
 \usepackage{mscthesis}
 \usepackage{lipsum} % standard filler text, only needed for demo
@@ -92,12 +93,12 @@ Email: & \@authoremail \\
 \noindent\begin{tabular}{@{}ll@{}}
 Thesis Committee:\\[0.4em]
 Chair: & \@chair\\
+\ifcommittee@member
+Committee Member: & \@committeemember\\
+\fi
 University supervisor: & \@supervisor\\
 \ifexternal@supervisor
 Company supervisor: & \@externalsupervisor\\
-\fi
-\ifcommittee@member
-Committee Member: & \@committeemember\\
 \fi
 \end{tabular}
 \end{adjustwidth}
@@ -158,12 +159,10 @@ Delft, the Netherlands \\
 %}
 
 % thesis committee:
-\chair{Prof. Dr. Z. Perko, Faculty RID, TU Delft}
-\supervisor{Alessandro Longhi, Faculty RID, TU Delft}
-% The following two are optional for LaTeX (current university
-% regulations state that at least one of them should be assigned)
-\committeemember{Dr. John Smith, Faculty RID, TU Delft}
-\committeemember{Dr. Ola Nordmann, Faculty RID, TU Delft}
+\chair{Dr. Z. Perk{\'o}, Reactor Institute Delft, TU Delft}
+\committeemember{Dr.ir. D. Lathouwers, Reactor Institute Delft, TU Delft}
+\committeemember{Prof.dr.ir. M.B. van Gijzen, Delft Institute of Applied Mathematics, TU Delft}
+\supervisor{Alessandro Longhi, Reactor Institute Delft, TU Delft}
 
 
 
@@ -174,7 +173,7 @@ Delft, the Netherlands \\
 \begin{document}
 \frontmatter
 \thispagestyle{empty}
-\maketitle                                      % for the cover page
+%\maketitle                                     % for the cover page
 \makeformaltitlepages{\input{sections/abstract}}         % for formal title pages with all info
 
 %\input{sections/preface}

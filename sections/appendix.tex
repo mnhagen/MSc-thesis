@@ -3,7 +3,7 @@
 AI-based tools were used during this thesis project as support for
 coding, debugging, troubleshooting, source finding, and comprehension of
 technical material. During the writing process, they were also used to
-help structure sections and improve phrasing.
+help structure sections.
 
 All AI-generated suggestions were reviewed and edited before being
 included. The research decisions, experiments, interpretation of results,
@@ -21,8 +21,7 @@ and final thesis text remain my own responsibility.
     shows the redistribution of spectral energy over time.}
 \end{figure}
 
-This appendix provides additional details on the generation of the
-self-produced Navier-Stokes dataset used in the uniform grid
+This appendix provides additional details on the generation of the Navier-Stokes dataset used in the uniform grid
 experiments. The dataset is formulated in vorticity form on the unit
 square and is generated numerically from the incompressible
 Navier-Stokes equation \cite{batchelor1967fluid,chorin1993fluid}:
@@ -112,7 +111,7 @@ normalized variables,
 \]
 scales both inputs to the range $[0,1]$. This improves the test relative
 RMSE to $2.57 \times 10^{-3}$ and reduces the test MSE by approximately
-a factor of two. Thus, for this dataset, giving the model inputs on a
+32\%. Thus, for this dataset, giving the model inputs on a
 common bounded scale is beneficial.
 
 The next representation augments the min--max normalized variables with
@@ -127,9 +126,8 @@ dependencies easier for the model to represent.
 Finally, a trigonometric representation was tested using the min--max
 normalized variables together with boundary-aware functions of the axial
 coordinate:
-$(\hat z, \hat T, \sin(\pi(z-z_{\min})/L_z), 
- \cos(\pi(z-z_{\min})/L_z),\hat z\hat T)$, where
-$L_z=z_{\max}-z_{\min}$. This choice is more directly motivated by the
+$(\hat z, \hat T, \sin(\pi\hat z),
+\cos(\pi\hat z), \hat z\hat T)$. This choice is more directly motivated by the
 structure of the data. In particular, the sine term vanishes at the
 axial boundaries, which reflects the observed trend that the peak
 temperature varies smoothly with $z$. The cosine term provides a complementary axial feature, and
@@ -137,11 +135,11 @@ the interaction term $\hat z\hat T$ gives the model direct access to
 coupled dependence on axial position and boundary temperature.
 
 The trigonometric representation gives the best performance among the
-tested configurations, with a test relative RMSE of
+tested configurations, with an RMSE of
 $2.07 \times 10^{-3}$. This shows that using physical understanding
 of the dataset in the input representation can improve the Geo-FNO
 prediction accuracy. The trigonometric representation
-was therefore used for the HTGR results reported in the main text.
+was used for the HTGR results reported in the main text.
 
 \begin{table}[t]
     \centering
@@ -178,7 +176,7 @@ was therefore used for the HTGR results reported in the main text.
 
 This appendix provides a complete list of the hyperparameters used for each model and dataset in the experiments described in Chapter~\ref{cha:method}. The listed hyperparameters were determined through a combination of prior literature, preliminary experiments, and manual tuning to achieve good performance.
 
-For the training of all models, the number of epochs was dictated by a patience scheme. When the validation loss did not improve by at least 0.1\% for 25 consecutive epochs, training was stopped. This means that the exact number of epochs varied across models and datasets. The maximum number of epochs was set sufficiently high so that the patience criterion was always met before reaching it, so between 400 and 1000 epochs depending on the model. All models used the Adam optimizer with a cosine annealing learning rate scheduler. The specific learning rates and other hyperparameters are listed in Tables~\ref{tab:fno-hyperparameters} and \ref{tab:cno-hyperparameters}.
+For the training of all models, the number of epochs was dictated by a patience scheme. When the validation loss did not improve by at least 0.1\% for 25 consecutive epochs, training was stopped. This means that the exact number of epochs varied across models and datasets. The maximum number of epochs was set sufficiently high so that the patience criterion was always met before reaching it. All models used the Adam optimizer with a cosine annealing learning rate scheduler. The specific learning rates and other hyperparameters are listed in Tables~\ref{tab:fno-hyperparameters} and \ref{tab:cno-hyperparameters}.
 
 Some model-specific hyperparameters require brief clarification. For the FNO and Geo-FNO, modes (or modes1 and modes2) denote the number of retained Fourier modes in each spatial direction after spectral truncation, while width denotes the number of feature channels in the lifted latent representation. For the CNO, N\_layers controls the depth of the encoder--decoder structure, N\_res and N\_res\_neck denote the number of residual blocks in the encoder/decoder and bottleneck (lowest layer) respectively, and channel\_multiplier determines the number of feature channels at each spatial resolution.
 
@@ -244,7 +242,7 @@ HTGR temperature & 8           & $1\times 10^{-3}$ & $5\times 10^{-5}$  & 16    
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/geo-fno-performance-comparison.png}
+    \includegraphics[width=0.99\textwidth]{figures/geo-fno-performance-comparison.png}
     \caption{\label{fig:cylinder-flow-seam} Representative Geo-FNO prediction on the cylinder flow dataset before and after correcting the Fourier mode reconstruction bug. In the first row, from left to right, the ground truth, the original prediction containing the seam artifact, and the corrected prediction after patching the negative-mode reconstruction are shown using a shared color scale for direct comparison. The second row shows the prediction of the unpatched model trained without the learned coordinate mapping $\phi^{-1}$. This case is displayed with a separate colorbar due to the significantly larger artifact amplitude and resulting difference in value range.}
 \end{figure}
 
@@ -264,9 +262,7 @@ The source of the artifact was found to be an error in the reconstruction of dis
 U(-k_x, -k_y) = \overline{U(k_x, k_y)},
 \label{eq:hermitian-symmetry}
 \end{equation}
-where the overline denotes complex conjugation. This symmetry implies that only half of the Fourier spectrum needs to be stored explicitly, since the remaining coefficients can be reconstructed from their conjugate counterparts. In principle, any conjugate half of the spectrum could be discarded; in the Geo-FNO implementation, the modes with negative $k_y$ are omitted for memory efficiency and reconstructed during the inverse transform using Equation~\ref{eq:hermitian-symmetry}.
-
-The implementation keeps only the modes with positive $k_y$, while separate learned complex weights are applied to the $(+k_x,+k_y)$ and $(-k_x,+k_y)$ branches. During reconstruction of the physical field, the discarded negative $k_y$ modes are recovered using Equation~\ref{eq:hermitian-symmetry}. The seam artifact was caused by an indexing error in this reconstruction step.
+where the overline denotes complex conjugation. This symmetry implies that only one conjugate half of the Fourier spectrum needs to be stored explicitly, since the remaining coefficients can be reconstructed from their conjugate counterparts. In the Geo-FNO implementation, the modes with negative \(k_y\) are omitted for memory efficiency. The model therefore keeps the positive-\(k_y\) modes, with separate learned complex weights applied to the \((+k_x,+k_y)\) and \((-k_x,+k_y)\) branches. During reconstruction of the physical field, the discarded negative-\(k_y\) modes are recovered using Equation~\ref{eq:hermitian-symmetry}. The seam artifact was caused by an indexing error in this reconstruction step.
 
 The original implementation reconstructed the discarded modes using a simple reversal of the stored mode ordering. For the $k_y$ direction, this is correct. However, for the $k_x$ direction, the Fourier modes are stored in the order
 \begin{equation}
